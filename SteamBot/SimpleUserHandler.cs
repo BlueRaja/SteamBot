@@ -114,7 +114,7 @@ namespace SteamBot
             
             List<string> errors = new List<string> ();
             
-            foreach (TradeUserAssets asset in Trade.OtherOfferedItems)
+            foreach (TradeUserAssets asset in Trade.OtherOfferedItems.Select(o => o.assetid))
             {
                 var item = Trade.OtherInventory.GetItem(asset.assetid);
                 if (item.Defindex == 5000)
