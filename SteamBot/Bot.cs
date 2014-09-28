@@ -666,7 +666,7 @@ namespace SteamBot
         {
             do
             {
-                IsLoggedIn = SteamWeb.Authenticate(MyUniqueId, SteamClient, out sessionId, out token, out tokensecure, MyUserNonce);
+                IsLoggedIn = SteamWeb.Authenticate(MyUniqueId, SteamClient, MyUserNonce);
 
                 if(!IsLoggedIn)
                 {
@@ -675,14 +675,14 @@ namespace SteamBot
                 }
             } while(!IsLoggedIn);
 
-                    log.Success("User Authenticated!");
+            log.Success("User Authenticated!");
 
-                    tradeManager = new TradeManager(ApiKey, SteamWeb);
-                    tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
-                    tradeManager.OnTimeout += OnTradeTimeout;
+            tradeManager = new TradeManager(ApiKey, SteamWeb);
+            tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
+            tradeManager.OnTimeout += OnTradeTimeout;
 
-                    CookiesAreInvalid = false;
-                }
+            CookiesAreInvalid = false;
+        }
 
         /// <summary>
         /// Checks if sessionId and token cookies are still valid.
