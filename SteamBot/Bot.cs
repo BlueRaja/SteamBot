@@ -72,7 +72,9 @@ namespace SteamBot
         public int CurrentGame = 0;
 
         // The Steam Web API key.
-        public string apiKey;
+        public string ApiKey { get; private set; }
+
+        public SteamWeb SteamWeb { get; private set; }
 
         // The prefix put in the front of the bot's display name.
         string DisplayNamePrefix;
@@ -87,9 +89,6 @@ namespace SteamBot
         public string MyUserNonce;
         public string MyUniqueId;
 
-        string sessionId;
-        string token;
-        string tokensecure;
         bool CookiesAreInvalid = true;
 
         bool isprocess;
@@ -127,7 +126,7 @@ namespace SteamBot
             DisplayNamePrefix = config.DisplayNamePrefix;
             TradePollingInterval = config.TradePollingInterval <= 100 ? 800 : config.TradePollingInterval;
             Admins = config.Admins;
-            this.apiKey = apiKey;
+            this.ApiKey  = apiKey;
             this.isprocess = process;
 
             try
@@ -164,6 +163,7 @@ namespace SteamBot
             CreateLog();
             CreateHandler = handlerCreator;
             BotControlClass = config.BotControlClass;
+            SteamWeb = new SteamWeb();
 
             // Hacking around https
             ServicePointManager.ServerCertificateValidationCallback += SteamWeb.ValidateRemoteCertificate;
@@ -437,7 +437,7 @@ namespace SteamBot
                 if (Trade.CurrentSchema == null)
                 {
                     log.Info("Downloading Schema...");
-                    Trade.CurrentSchema = Schema.FetchSchema(apiKey);
+                    Trade.CurrentSchema = Schema.FetchSchema (ApiKey);
                     log.Success("Schema Downloaded!");
                 }
 
@@ -677,7 +677,7 @@ namespace SteamBot
 
                     log.Success("User Authenticated!");
 
-                    tradeManager = new TradeManager(apiKey, sessionId, token);
+                    tradeManager = new TradeManager(ApiKey, SteamWeb);
                     tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
                     tradeManager.OnTimeout += OnTradeTimeout;
 
@@ -695,14 +695,9 @@ namespace SteamBot
             if (CookiesAreInvalid)
                 return false;
 
-            // Construct cookie container
-            CookieContainer cookies = new CookieContainer();
-            cookies.Add(new Cookie("sessionid", sessionId, String.Empty, "steamcommunity.com"));
-            cookies.Add(new Cookie("steamLogin", token, String.Empty, "steamcommunity.com"));
-
             try
             {
-                if (!SteamWeb.VerifyCookies(cookies))
+                if (!SteamWeb.VerifyCookies())
                 {
                     // Cookies are no longer valid
                     log.Warn("Cookies are invalid. Need to re-authenticate.");
@@ -710,18 +705,15 @@ namespace SteamBot
                     SteamUser.RequestWebAPIUserNonce();
                     return false;
                 }
-                else
-                {
-                    return true;
                 }
-            }
             catch
             {
                 // Even if exception is caught, we should still continue.
                 log.Warn("Cookie check failed. http://steamcommunity.com is possibly down.");
+            }
+
                 return true;
             }
-        }
 
         UserHandler GetUserHandler(SteamID sid)
         {
@@ -797,7 +789,7 @@ namespace SteamBot
         /// </example>
         public void GetInventory()
         {
-            myInventoryTask = Task.Factory.StartNew(() => Inventory.FetchInventory(SteamUser.SteamID, apiKey));
+            myInventoryTask = Task.Factory.StartNew(() => Inventory.FetchInventory(SteamUser.SteamID, ApiKey, SteamWeb));
         }
 
         /// <summary>
