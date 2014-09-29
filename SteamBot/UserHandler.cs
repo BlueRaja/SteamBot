@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SteamKit2;
 using SteamTrade;
+using SteamBot.Logging;
 
 namespace SteamBot
 {
