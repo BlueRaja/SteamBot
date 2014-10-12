@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SteamKit2;
 using SteamTrade;
+using SteamBot.Logging;
 using SteamTrade.TradeOffer;
 
 namespace SteamBot
@@ -166,6 +167,10 @@ namespace SteamBot
         public virtual void OnBotCommand(string command)
         {
 
+        }
+
+        public virtual void OnBotCreated()
+        {
         }
 
         /// <summary>
