@@ -23,6 +23,18 @@ namespace SteamBot
         private bool _lastMessageWasFromTrade;
         private Task<Inventory> otherInventoryTask;
 
+        protected SteamWeb SteamWeb
+        {
+            get
+            {
+                if(Bot == null || Bot.SteamWeb == null)
+                {
+                    throw new InvalidOperationException("You cannot use 'SteamWeb' before the Bot has been initialized!");
+                }
+                return Bot.SteamWeb;
+            }
+        }
+
         public UserHandler (Bot bot, SteamID sid)
         {
             Bot = bot;
@@ -47,7 +59,7 @@ namespace SteamBot
         /// </example>
         public void GetOtherInventory()
         {
-            otherInventoryTask = Task.Factory.StartNew(() =>Inventory.FetchInventory(OtherSID, Bot.apiKey));
+            otherInventoryTask = Task.Factory.StartNew(() =>Inventory.FetchInventory(OtherSID, Bot.ApiKey, SteamWeb));
         }
 
         public Inventory OtherInventory
