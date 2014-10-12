@@ -54,6 +54,8 @@
     <Compile Include="Exceptions\TradeException.cs" />
     <Compile Include="ForeignInventory.cs" />
     <Compile Include="GenericInventory.cs" />
+    <Compile Include="Inventory\Game.cs" />
+    <Compile Include="Inventory\InventoryType.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="Schema.cs" />
     <Compile Include="Inventory.cs" />
