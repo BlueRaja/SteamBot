@@ -55,10 +55,13 @@
     <Compile Include="ForeignInventory.cs" />
     <Compile Include="GenericInventory.cs" />
     <Compile Include="Inventory\Game.cs" />
+    <Compile Include="Inventory\InventoryItem.cs" />
+    <Compile Include="Inventory\InventoryJsonDownloader.cs" />
+    <Compile Include="Inventory\InventoryJsonParser.cs" />
     <Compile Include="Inventory\InventoryType.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="Schema.cs" />
-    <Compile Include="Inventory.cs" />
+    <Compile Include="Inventory_OLD.cs" />
     <Compile Include="SteamWeb.cs" />
     <Compile Include="TradeOffer\OfferSession.cs" />
     <Compile Include="TradeOffer\TradeOffer.cs" />
