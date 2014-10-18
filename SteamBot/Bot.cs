@@ -103,9 +103,9 @@ namespace SteamBot
 
         TradeManager tradeManager;
         private TradeOfferManager tradeOfferManager;
-        private Task<Inventory> myInventoryTask;
+        private Task<Inventory_OLD> myInventoryTask;
 
-        public Inventory MyInventory
+        public Inventory_OLD MyInventory
         {
             get
             {
@@ -849,7 +849,7 @@ namespace SteamBot
         /// </example>
         public void GetInventory()
         {
-            myInventoryTask = Task.Factory.StartNew(() => Inventory.FetchInventory(SteamUser.SteamID, ApiKey, SteamWeb));
+            myInventoryTask = Task.Factory.StartNew(() => Inventory_OLD.FetchInventory(SteamUser.SteamID, ApiKey, SteamWeb));
         }
 
         public void TradeOfferRouter(TradeOffer offer)

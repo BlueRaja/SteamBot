@@ -17,8 +17,8 @@ namespace SteamTrade
         private DateTime tradeStartTime;
         private DateTime lastOtherActionTime;
         private DateTime lastTimeoutMessage;
-        private Task<Inventory> myInventoryTask;
-        private Task<Inventory> otherInventoryTask;
+        private Task<Inventory_OLD> myInventoryTask;
+        private Task<Inventory_OLD> otherInventoryTask;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SteamTrade.TradeManager"/> class.
@@ -84,7 +84,7 @@ namespace SteamTrade
         /// <value>
         /// The bot's inventory fetched via Steam Web API.
         /// </value>
-        public Inventory MyInventory
+        public Inventory_OLD MyInventory
         {
             get
             {
@@ -102,7 +102,7 @@ namespace SteamTrade
         /// <value>
         /// The other trade partner's inventory fetched via Steam Web API.
         /// </value>
-        public Inventory OtherInventory
+        public Inventory_OLD OtherInventory
         {
             get
             {
@@ -220,7 +220,7 @@ namespace SteamTrade
         public void InitializeTrade (SteamID me, SteamID other)
         {
             // fetch other player's inventory from the Steam API.
-            otherInventoryTask = Task.Factory.StartNew(() => Inventory.FetchInventory(other.ConvertToUInt64(), ApiKey, SteamWeb));
+            otherInventoryTask = Task.Factory.StartNew(() => Inventory_OLD.FetchInventory(other.ConvertToUInt64(), ApiKey, SteamWeb));
 
             //if (OtherInventory == null)
             //{
@@ -228,7 +228,7 @@ namespace SteamTrade
             //}
             
             // fetch our inventory from the Steam API.
-            myInventoryTask = Task.Factory.StartNew(() => Inventory.FetchInventory(me.ConvertToUInt64(), ApiKey, SteamWeb));
+            myInventoryTask = Task.Factory.StartNew(() => Inventory_OLD.FetchInventory(me.ConvertToUInt64(), ApiKey, SteamWeb));
             
             // check that the schema was already successfully fetched
             if (Trade.CurrentSchema == null)

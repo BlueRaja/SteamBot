@@ -102,12 +102,12 @@ namespace SteamBot
             SendTradeMessage("Success. (Type {0} for commands)", HelpCmd);
         }
 
-        public override void OnTradeAddItem(Schema.Item schemaItem, Inventory.Item inventoryItem)
+        public override void OnTradeAddItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem)
         {
             // whatever.   
         }
 
-        public override void OnTradeRemoveItem(Schema.Item schemaItem, Inventory.Item inventoryItem)
+        public override void OnTradeRemoveItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem)
         {
             // whatever.
         }
@@ -287,7 +287,7 @@ namespace SteamBot
             var l = Trade.CurrentSchema.GetItemsByCraftingMaterial("supply_crate");
 
 
-            List<Inventory.Item> invItems = new List<Inventory.Item>();
+            List<Inventory_OLD.Item> invItems = new List<Inventory_OLD.Item>();
 
             foreach (var schemaItem in l)
             {

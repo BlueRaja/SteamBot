@@ -112,9 +112,9 @@ namespace SteamBot
 
         public override void OnTradeInit() { }
 
-        public override void OnTradeAddItem(Schema.Item schemaItem, Inventory.Item inventoryItem) { }
+        public override void OnTradeAddItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) { }
 
-        public override void OnTradeRemoveItem(Schema.Item schemaItem, Inventory.Item inventoryItem) { }
+        public override void OnTradeRemoveItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) { }
 
         public override void OnTradeMessage(string message) { }
 

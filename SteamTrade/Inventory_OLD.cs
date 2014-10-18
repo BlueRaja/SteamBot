@@ -6,7 +6,7 @@ using SteamKit2;
 
 namespace SteamTrade
 {
-    public class Inventory
+    public class Inventory_OLD
     {
         /// <summary>
         /// Fetches the inventory for the given Steam ID using the Steam API.
@@ -15,12 +15,12 @@ namespace SteamTrade
         /// <param name='steamId'>Steam identifier.</param>
         /// <param name='apiKey'>The needed Steam API key.</param>
         /// <param name="steamWeb">The SteamWeb instance for this Bot</param>
-        public static Inventory FetchInventory (ulong steamId, string apiKey, SteamWeb steamWeb)
+        public static Inventory_OLD FetchInventory (ulong steamId, string apiKey, SteamWeb steamWeb)
         {
             var url = "http://api.steampowered.com/IEconItems_440/GetPlayerItems/v0001/?key=" + apiKey + "&steamid=" + steamId;
             string response = steamWeb.Fetch (url, "GET", null, false);
             InventoryResponse result = JsonConvert.DeserializeObject<InventoryResponse>(response);
-            return new Inventory(result.result);
+            return new Inventory_OLD(result.result);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace SteamTrade
         public bool IsPrivate { get; private set; }
         public bool IsGood { get; private set; }
 
-        protected Inventory (InventoryResult apiInventory)
+        protected Inventory_OLD (InventoryResult apiInventory)
         {
             NumSlots = apiInventory.num_backpack_slots;
             Items = apiInventory.items;

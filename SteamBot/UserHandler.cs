@@ -21,7 +21,7 @@ namespace SteamBot
         public SteamID OtherSID { get; private set; }
 
         private bool _lastMessageWasFromTrade;
-        private Task<Inventory> otherInventoryTask;
+        private Task<Inventory_OLD> otherInventoryTask;
 
         protected SteamWeb SteamWeb
         {
@@ -59,10 +59,10 @@ namespace SteamBot
         /// </example>
         public void GetOtherInventory()
         {
-            otherInventoryTask = Task.Factory.StartNew(() =>Inventory.FetchInventory(OtherSID, Bot.ApiKey, SteamWeb));
+            otherInventoryTask = Task.Factory.StartNew(() =>Inventory_OLD.FetchInventory(OtherSID, Bot.ApiKey, SteamWeb));
         }
 
-        public Inventory OtherInventory
+        public Inventory_OLD OtherInventory
         {
             get
             {
@@ -219,9 +219,9 @@ namespace SteamBot
 
         public abstract void OnTradeInit ();
 
-        public abstract void OnTradeAddItem (Schema.Item schemaItem, Inventory.Item inventoryItem);
+        public abstract void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
 
-        public abstract void OnTradeRemoveItem (Schema.Item schemaItem, Inventory.Item inventoryItem);
+        public abstract void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
 
         public void OnTradeMessageHandler(string message)
         {

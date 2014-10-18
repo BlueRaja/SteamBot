@@ -64,15 +64,15 @@ namespace SteamTrade
 
         private readonly Dictionary<int, TradeUserAssets> myOfferedItemsLocalCopy;
         private readonly TradeSession session;
-        private readonly Task<Inventory> myInventoryTask;
-        private readonly Task<Inventory> otherInventoryTask;
+        private readonly Task<Inventory_OLD> myInventoryTask;
+        private readonly Task<Inventory_OLD> otherInventoryTask;
         private List<TradeUserAssets> myOfferedItems;
         private List<TradeUserAssets> otherOfferedItems;
         private bool otherUserTimingOut;
         private bool tradeCancelledByBot;
         private int numUnknownStatusUpdates;
 
-        internal Trade(SteamID me, SteamID other, SteamWeb steamWeb, Task<Inventory> myInventoryTask, Task<Inventory> otherInventoryTask)
+        internal Trade(SteamID me, SteamID other, SteamWeb steamWeb, Task<Inventory_OLD> myInventoryTask, Task<Inventory_OLD> otherInventoryTask)
         {
             TradeStarted = false;
             OtherIsReady = false;
@@ -108,7 +108,7 @@ namespace SteamTrade
         /// <summary> 
         /// Gets the inventory of the other user. 
         /// </summary>
-        public Inventory OtherInventory
+        public Inventory_OLD OtherInventory
         {
             get
             {
@@ -128,7 +128,7 @@ namespace SteamTrade
         /// <summary> 
         /// Gets the inventory of the bot.
         /// </summary>
-        public Inventory MyInventory
+        public Inventory_OLD MyInventory
         {
             get
             {
@@ -209,9 +209,9 @@ namespace SteamTrade
 
         public delegate void SuccessfulInit();
 
-        public delegate void UserAddItemHandler(Schema.Item schemaItem, Inventory.Item inventoryItem);
+        public delegate void UserAddItemHandler(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
 
-        public delegate void UserRemoveItemHandler(Schema.Item schemaItem, Inventory.Item inventoryItem);
+        public delegate void UserRemoveItemHandler(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
 
         public delegate void MessageHandler(string msg);
 
@@ -328,8 +328,8 @@ namespace SteamTrade
         /// </returns>
         public bool AddItemByDefindex(int defindex)
         {
-            List<Inventory.Item> items = MyInventory.GetItemsByDefindex(defindex);
-            foreach(Inventory.Item item in items)
+            List<Inventory_OLD.Item> items = MyInventory.GetItemsByDefindex(defindex);
+            foreach(Inventory_OLD.Item item in items)
             {
                 if(item != null && myOfferedItemsLocalCopy.Values.All(o => o.assetid != item.Id) && !item.IsNotTradeable)
                 {
@@ -348,11 +348,11 @@ namespace SteamTrade
         /// <returns>Number of items added.</returns>
         public uint AddAllItemsByDefindex(int defindex, uint numToAdd = 0)
         {
-            List<Inventory.Item> items = MyInventory.GetItemsByDefindex(defindex);
+            List<Inventory_OLD.Item> items = MyInventory.GetItemsByDefindex(defindex);
 
             uint added = 0;
 
-            foreach(Inventory.Item item in items)
+            foreach(Inventory_OLD.Item item in items)
             {
                 if(item != null && myOfferedItemsLocalCopy.Values.All(o => o.assetid != item.Id) && !item.IsNotTradeable)
                 {
@@ -403,7 +403,7 @@ namespace SteamTrade
         {
             foreach(TradeUserAssets asset in myOfferedItemsLocalCopy.Values)
             {
-                Inventory.Item item = MyInventory.GetItem(asset.assetid);
+                Inventory_OLD.Item item = MyInventory.GetItem(asset.assetid);
                 if(item != null && item.Defindex == defindex)
                 {
                     return RemoveItem(item.Id);
@@ -420,11 +420,11 @@ namespace SteamTrade
         /// <returns>Number of items removed.</returns>
         public uint RemoveAllItemsByDefindex(int defindex, uint numToRemove = 0)
         {
-            List<Inventory.Item> items = MyInventory.GetItemsByDefindex(defindex);
+            List<Inventory_OLD.Item> items = MyInventory.GetItemsByDefindex(defindex);
 
             uint removed = 0;
 
-            foreach(Inventory.Item item in items)
+            foreach(Inventory_OLD.Item item in items)
             {
                 if(item != null && myOfferedItemsLocalCopy.Values.Any(o => o.assetid == item.Id))
                 {
@@ -451,7 +451,7 @@ namespace SteamTrade
 
             foreach(TradeUserAssets asset in myOfferedItemsLocalCopy.Values.ToList())
             {
-                Inventory.Item item = MyInventory.GetItem(asset.assetid);
+                Inventory_OLD.Item item = MyInventory.GetItem(asset.assetid);
 
                 if(item != null)
                 {
@@ -719,7 +719,7 @@ namespace SteamTrade
 
             if(OtherInventory != null && !OtherInventory.IsPrivate)
             {
-                Inventory.Item item = OtherInventory.GetItem(asset.assetid);
+                Inventory_OLD.Item item = OtherInventory.GetItem(asset.assetid);
                 if(item != null)
                 {
                     Schema.Item schemaItem = CurrentSchema.GetItem(item.Defindex);
@@ -732,7 +732,7 @@ namespace SteamTrade
                 }
                 else
                 {
-                    item = new Inventory.Item
+                    item = new Inventory_OLD.Item
                     {
                         Id = asset.assetid,
                         AppId = asset.appid,
@@ -787,7 +787,7 @@ namespace SteamTrade
 
             if(OtherInventory != null)
             {
-                Inventory.Item item = OtherInventory.GetItem(asset.assetid);
+                Inventory_OLD.Item item = OtherInventory.GetItem(asset.assetid);
                 if(item != null)
                 {
                     Schema.Item schemaItem = CurrentSchema.GetItem(item.Defindex);
@@ -801,7 +801,7 @@ namespace SteamTrade
                 else
                 {
                     // TODO: Log this (Couldn't find item in user's inventory can't find item in CurrentSchema
-                    item = new Inventory.Item
+                    item = new Inventory_OLD.Item
                     {
                         Id = asset.assetid,
                         AppId = asset.appid,

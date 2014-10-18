@@ -92,7 +92,7 @@ namespace SteamBot
             // -----------------------------------------------------------------------------------
         }
         
-        public override void OnTradeAddItem (Schema.Item schemaItem, Inventory.Item inventoryItem) {
+        public override void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) {
             // USELESS DEBUG MESSAGES -------------------------------------------------------------------------------
             SendTradeMessage("Object AppID: {0}", inventoryItem.AppId);
             SendTradeMessage("Object ContextId: {0}", inventoryItem.ContextId);
@@ -121,7 +121,7 @@ namespace SteamBot
             // ------------------------------------------------------------------------------------------------------
         }
         
-        public override void OnTradeRemoveItem (Schema.Item schemaItem, Inventory.Item inventoryItem) {}
+        public override void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) {}
         
         public override void OnTradeMessage (string message) {
             switch (message.ToLower())
