@@ -33,7 +33,8 @@ namespace SteamTrade.Inventory
             item.InventoryPosition = (int) itemJo["pos"];
 
             item.BackgroundColor = (string) descriptionJo["background_color"];
-            item.IconUrl = (string) descriptionJo["icon_url"];
+            item.IconUrl = @"http://steamcommunity-a.akamaihd.net/economy/image/" + (string) descriptionJo["icon_url"];
+            item.IconUrlLarge = @"http://steamcommunity-a.akamaihd.net/economy/image/" + (string)descriptionJo["icon_url_large"];
             item.OriginalName = (string) descriptionJo["market_name"];
             item.IsMarketable = (bool) descriptionJo["marketable"];
             item.DisplayName = (string) descriptionJo["name"];

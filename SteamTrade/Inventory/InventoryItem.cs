@@ -13,6 +13,7 @@ namespace SteamTrade.Inventory
         public bool IsTradable { get; internal set; }
         public bool IsMarketable { get; internal set; }
         public string IconUrl { get; internal set; }
+        public string IconUrlLarge { get; internal set; }
         public string Type { get; internal set; }
         public long Id { get; internal set; }
         public int InventoryPosition { get; internal set; }
