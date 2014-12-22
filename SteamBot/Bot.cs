@@ -12,6 +12,7 @@ using SteamBot.SteamGroups;
 using SteamKit2;
 using SteamTrade;
 using SteamKit2.Internal;
+using SteamTrade.TradeOffer;
 
 namespace SteamBot
 {
@@ -36,6 +37,7 @@ namespace SteamBot
         public SteamTrading SteamTrade;
         public SteamUser SteamUser;
         public SteamGameCoordinator SteamGameCoordinator;
+        public SteamNotifications SteamNotifications;
 
         // The current trade; if the bot is not in a trade, this is
         // null.
@@ -98,6 +100,7 @@ namespace SteamBot
         SteamUser.LogOnDetails logOnDetails;
 
         TradeManager tradeManager;
+        private TradeOfferManager tradeOfferManager;
         private Task<Inventory> myInventoryTask;
 
         public Inventory MyInventory
@@ -125,8 +128,9 @@ namespace SteamBot
             DisplayNamePrefix = config.DisplayNamePrefix;
             TradePollingInterval = config.TradePollingInterval <= 100 ? 800 : config.TradePollingInterval;
             Admins = config.Admins;
-            this.apiKey = apiKey;
+            this.apiKey = !String.IsNullOrEmpty(config.ApiKey) ? config.ApiKey : apiKey;
             this.isprocess = process;
+
             try
             {
                 LogLevel = (Log.LogLevel)Enum.Parse(typeof(Log.LogLevel), config.LogLevel, true);
@@ -145,10 +149,12 @@ namespace SteamBot
 
             log.Debug("Initializing Steam Bot...");
             SteamClient = new SteamClient();
+            SteamClient.AddHandler(new SteamNotifications());
             SteamTrade = SteamClient.GetHandler<SteamTrading>();
             SteamUser = SteamClient.GetHandler<SteamUser>();
             SteamFriends = SteamClient.GetHandler<SteamFriends>();
             SteamGameCoordinator = SteamClient.GetHandler<SteamGameCoordinator>();
+            SteamNotifications = SteamClient.GetHandler<SteamNotifications>();
 
             backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
             backgroundWorker.DoWork += BackgroundWorkerOnDoWork;
@@ -252,6 +258,27 @@ namespace SteamBot
             GetUserHandler(CurrentTrade.OtherSID).OnTradeTimeout();
         }
 
+        /// <summary>
+        /// Create a new trade offer with the specified partner
+        /// </summary>
+        /// <param name="other">SteamId of the partner</param>
+        /// <returns></returns>
+        public TradeOffer NewTradeOffer(SteamID other)
+        {
+            return tradeOfferManager.NewOffer(other);
+        }
+
+        /// <summary>
+        /// Try to get a specific trade offer using the offerid
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <param name="tradeOffer"></param>
+        /// <returns></returns>
+        public bool TryGetTradeOffer(string offerId, out TradeOffer tradeOffer)
+        {
+            return tradeOfferManager.GetOffer(offerId, out tradeOffer);
+        }
+
         public void HandleBotCommand(string command)
         {
             try
@@ -329,7 +356,7 @@ namespace SteamBot
             CurrentGame = id;
         }
 
-        void HandleSteamMessage(CallbackMsg msg)
+        void HandleSteamMessage(ICallbackMsg msg)
         {
             log.Debug(msg.ToString());
 
@@ -406,29 +433,24 @@ namespace SteamBot
                 GetUserHandler(SteamClient.SteamID).OnLoginCompleted();
             });
 
-            msg.Handle<SteamClient.JobCallback<SteamUser.WebAPIUserNonceCallback>>(jobCallback =>
+            msg.Handle<SteamUser.WebAPIUserNonceCallback>(webCallback =>
             {
                 log.Debug("Received new WebAPIUserNonce.");
 
-                if (jobCallback.Callback.Result == EResult.OK)
+                if (webCallback.Result == EResult.OK)
                 {
-                    MyUserNonce = jobCallback.Callback.Nonce;
-
+                    MyUserNonce = webCallback.Nonce;
                     UserWebLogOn();
                 }
                 else
                 {
-                    log.Error("WebAPIUserNonce Error: " + jobCallback.Callback.Result);
+                    log.Error("WebAPIUserNonce Error: " + webCallback.Result);
                 }
             });
 
-            // handle a special JobCallback differently than the others
-            if (msg.IsType<SteamClient.JobCallback<SteamUser.UpdateMachineAuthCallback>>())
-            {
-                msg.Handle<SteamClient.JobCallback<SteamUser.UpdateMachineAuthCallback>>(
-                    jobCallback => OnUpdateMachineAuthCallback(jobCallback.Callback, jobCallback.JobID)
-                );
-            }
+            msg.Handle<SteamUser.UpdateMachineAuthCallback>(
+                authCallback => OnUpdateMachineAuthCallback(authCallback)
+            );
             #endregion
 
             #region Friends
@@ -598,6 +620,33 @@ namespace SteamBot
                 SteamClient.Connect();
             });
             #endregion
+
+            #region Notifications
+            msg.Handle<SteamBot.SteamNotifications.NotificationCallback>(callback =>
+            {
+                //currently only appears to be of trade offer
+                if (callback.Notifications.Count != 0)
+                {
+                    foreach (var notification in callback.Notifications)
+                    {
+                        log.Info(notification.UserNotificationType + " notification");
+                    }
+                }
+
+                // Get offers only if cookies are valid
+                if (CheckCookies())
+                    tradeOfferManager.GetOffers();
+            });
+
+            msg.Handle<SteamBot.SteamNotifications.CommentNotificationCallback>(callback =>
+            {
+                //various types of comment notifications on profile/activity feed etc
+                //log.Info("received CommentNotificationCallback");
+                //log.Info("New Commments " + callback.CommentNotifications.CountNewComments);
+                //log.Info("New Commments Owners " + callback.CommentNotifications.CountNewCommentsOwner);
+                //log.Info("New Commments Subscriptions" + callback.CommentNotifications.CountNewCommentsSubscriptions);
+            });
+            #endregion
         }
 
         void UserLogOn()
@@ -629,7 +678,14 @@ namespace SteamBot
                     tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
                     tradeManager.OnTimeout += OnTradeTimeout;
 
+                    tradeOfferManager = new TradeOfferManager(apiKey, sessionId, token, tokensecure);
+                    SubscribeTradeOffer(tradeOfferManager);
+
                     CookiesAreInvalid = false;
+
+                    // Success, check trade offers which we have received while we were offline
+                    tradeOfferManager.GetOffers();
+
                     break;
                 }
                 else
@@ -707,7 +763,7 @@ namespace SteamBot
             return output;
         }
 
-        void OnUpdateMachineAuthCallback(SteamUser.UpdateMachineAuthCallback machineAuth, JobID jobId)
+        void OnUpdateMachineAuthCallback(SteamUser.UpdateMachineAuthCallback machineAuth)
         {
             byte[] hash = SHAHash(machineAuth.Data);
 
@@ -729,7 +785,7 @@ namespace SteamBot
                 LastError = 0, // result from win32 GetLastError
                 Result = EResult.OK, // if everything went okay, otherwise ~who knows~
 
-                JobID = jobId, // so we respond to the correct server job
+                JobID = machineAuth.JobID, // so we respond to the correct server job
             };
 
             // send off our response
@@ -754,6 +810,24 @@ namespace SteamBot
         public void GetInventory()
         {
             myInventoryTask = Task.Factory.StartNew(() => Inventory.FetchInventory(SteamUser.SteamID, apiKey));
+        }
+
+        public void TradeOfferRouter(TradeOffer offer)
+        {
+            if (offer.OfferState == TradeOfferState.TradeOfferStateActive)
+            {
+                GetUserHandler(offer.PartnerSteamId).OnNewTradeOffer(offer);
+            }
+        }
+        public void SubscribeTradeOffer(TradeOfferManager tradeOfferManager)
+        {
+            tradeOfferManager.OnNewTradeOffer += TradeOfferRouter;
+        }
+
+        //todo: should unsubscribe eventually...
+        public void UnsubscribeTradeOffer(TradeOfferManager tradeOfferManager)
+        {
+            tradeOfferManager.OnNewTradeOffer -= TradeOfferRouter;
         }
 
         /// <summary>
@@ -818,7 +892,7 @@ namespace SteamBot
 
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            CallbackMsg msg;
+            ICallbackMsg msg;
 
             while (!backgroundWorker.CancellationPending)
             {
