@@ -37,8 +37,6 @@ namespace SteamBot
 
         public UserHandler(Bot bot, SteamID sid)
         {
-            if (sid == bot.NULL_STEAMID)
-                return;
             Bot = bot;
             OtherSID = sid;
             GetOtherInventory();
