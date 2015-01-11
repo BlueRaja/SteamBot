@@ -19,6 +19,7 @@ namespace SteamBot
 {
     public class Bot
     {
+        private SteamID NULL_STEAMID = 0;
         public string BotControlClass;
         // If the bot is logged in fully or not.  This is only set
         // when it is.
@@ -166,9 +167,9 @@ namespace SteamBot
             logFile = config.LogFile;
             CreateHandler = handlerCreator;
             BotControlClass = config.BotControlClass;
-            CreateLog();
             SteamWeb = new SteamWeb();
-
+            CreateLog();
+            GetUserHandler(NULL_STEAMID).OnBotCreated(); //Re-added this and it won't crash since UserHandler now has a valid SteamWeb object.
             // Hacking around https
             ServicePointManager.ServerCertificateValidationCallback += SteamWeb.ValidateRemoteCertificate;
 
