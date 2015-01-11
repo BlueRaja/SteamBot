@@ -19,7 +19,7 @@ namespace SteamBot
 {
     public class Bot
     {
-        private SteamID NULL_STEAMID = 0;
+        public readonly SteamID NULL_STEAMID = 0;
         public string BotControlClass;
         // If the bot is logged in fully or not.  This is only set
         // when it is.
