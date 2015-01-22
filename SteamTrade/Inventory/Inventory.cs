@@ -21,6 +21,7 @@ namespace SteamTrade.Inventory
         private SteamWeb web;
         private FetchType fType;
         private ulong start;
+        private bool callbackFired;
 
         public Inventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory, ulong iStart = 0)
         {
@@ -31,7 +32,8 @@ namespace SteamTrade.Inventory
             start = iStart;
         }
 
-        public Task Parse(OnInventoryLoaded callback)
+#pragma warning disable 4014, 1998
+        public async Task Parse(OnInventoryLoaded callback)
         {
             InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
             string json = null;
@@ -50,13 +52,12 @@ namespace SteamTrade.Inventory
             List<InventoryItem> items = new List<InventoryItem>();
             JObject inventoryJO = JObject.Parse(json);
             if (!(bool)inventoryJO["success"])
-                return null;
+                goto FireCallback;
             foreach(JProperty itemProperty in inventoryJO["rgInventory"])
             {
                 JObject itemJO = (JObject) itemProperty.Value;
                 string descriptionName = itemJO["classid"] + "_" + itemJO["instanceid"];
                 JObject descriptionJO = (JObject) inventoryJO["rgDescriptions"][descriptionName];
-
                 InventoryItem item = GenerateItemFromJson(itemJO, descriptionJO);
                 items.Add(item);
             }
@@ -64,23 +65,26 @@ namespace SteamTrade.Inventory
             {
                 Inventory moreInv = new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
                 moreInv.Parse(this.MoreInvLoaded);
-                while (!moreInv.InventoryLoaded)
+                while (!callbackFired)
                     Thread.Yield();
-                items.AddRange(moreInv.Items);
+                if (moreInv.InventoryLoaded)
+                    items.AddRange(moreInv.Items);
             }
-            callback(this);
             InventoryLoaded = true;
+            FireCallback:
+            callback(this);
         }
-
+#pragma warning restore
         private void MoreInvLoaded(Inventory inventory)
         {
             Console.WriteLine("Loaded " + inventory.Items.Count() + " more items.");
+            this.callbackFired = true;
         }
 
         private InventoryItem GenerateItemFromJson(JObject itemJo, JObject descriptionJo)
         {
             InventoryItem item = new InventoryItem();
-            item.InventoryType = invType;
+            item.InventoryType = InventoryType;
             item.Id = (long) itemJo["id"];
             item.InventoryPosition = (int) itemJo["pos"];
 
