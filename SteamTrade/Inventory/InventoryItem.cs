@@ -19,5 +19,7 @@ namespace SteamTrade.Inventory
         public int InventoryPosition { get; internal set; }
         public string NameColor { get; internal set; }
         public string BackgroundColor { get; internal set; }
+        public string Description { get; internal set; }
+        public InventoryTag[] Tags { get; internal set; }
     }
 }
