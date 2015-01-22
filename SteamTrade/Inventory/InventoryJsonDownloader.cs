@@ -28,7 +28,7 @@ namespace SteamTrade.Inventory
             {
                 { "sessionid", _steamWeb.SessionId },
                 { "partner", owner.ConvertToUInt64().ToString() },
-                { "appid", inventoryType.Game.ToString() },
+                { "appid", ((ulong)inventoryType.Game).ToString() },
                 { "contextid", inventoryType.ContextId.ToString() }
             };
 
@@ -47,7 +47,7 @@ namespace SteamTrade.Inventory
             {
                 { "sessionid", _steamWeb.SessionId },
                 { "steamid", owner.ConvertToUInt64().ToString() },
-                { "appid", inventoryType.Game.ToString() },
+                { "appid", ((ulong)inventoryType.Game).ToString() },
                 { "contextid", inventoryType.ContextId.ToString() }
             };
 
@@ -61,8 +61,7 @@ namespace SteamTrade.Inventory
         public string GetInventoryJson(SteamID owner, InventoryType inventoryType, ulong start)
         {
             string url = String.Format(@"http://steamcommunity.com/profiles/{0}/inventory/json/{1}/{2}/?start={3}",
-                owner.ConvertToUInt64(), inventoryType.Game, inventoryType.ContextId, start);
-
+                owner.ConvertToUInt64(), (ulong)inventoryType.Game, inventoryType.ContextId, start);
             return _steamWeb.Fetch(url, "GET");
         }
     }

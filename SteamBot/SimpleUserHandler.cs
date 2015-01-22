@@ -2,6 +2,7 @@ using SteamKit2;
 using System.Collections.Generic;
 using SteamTrade;
 using SteamTrade.TradeWebAPI;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -35,7 +36,18 @@ namespace SteamBot
         
         public override void OnMessage (string message, EChatEntryType type) 
         {
+            Inventory.FetchInventories(SteamWeb, OtherSID, OnInvCallback, new InventoryType[]{InventoryType.TeamFortress2, InventoryType.CSGO});
             SendChatMessage(Bot.ChatResponse);
+        }
+
+        private void OnInvCallback(Inventory inventory)
+        {
+            if (inventory.Items == null)
+            {
+                Log.Info("NO ITEMS!");
+                return;
+            }
+            Log.Info("In total, we parsed over {0} items for {1}", ((List<InventoryItem>)inventory.Items).Count, inventory.InventoryType.Game);
         }
 
         public override bool OnTradeRequest() 

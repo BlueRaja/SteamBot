@@ -9,7 +9,7 @@ namespace SteamTrade.Inventory
     /// Represents the "AppId", or game to which the inventory belongs.
     /// Note that a game may have more than one type of Inventory, eg. Steam has Gifts, Coupons, and Community
     /// </summary>
-    public enum Game
+    public enum Game : ulong
     {
         BattleBlockTheater = 238460,
         CSGO = 730,

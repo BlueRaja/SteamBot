@@ -32,8 +32,25 @@ namespace SteamTrade.Inventory
             start = iStart;
         }
 
+        public static void FetchInventories(IEnumerable<Inventory> inventories, OnInventoryLoaded callback)
+        {
+            foreach (Inventory inv in inventories)
+                inv.FetchInventory(callback);
+        }
+
+        public static void FetchInventories(SteamWeb web, SteamID owner, OnInventoryLoaded callback, IEnumerable<InventoryType> invTypes, FetchType fType = FetchType.Inventory)
+        {
+            foreach (InventoryType type in invTypes)
+                new Inventory(web, owner, type, fType).FetchInventory(callback);
+        }
+
+        public async void FetchInventory(OnInventoryLoaded callback)
+        {
+            await Parse(callback);
+        }
+
 #pragma warning disable 4014, 1998
-        public async Task Parse(OnInventoryLoaded callback)
+        private async Task Parse(OnInventoryLoaded callback)
         {
             InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
             string json = null;
@@ -53,7 +70,7 @@ namespace SteamTrade.Inventory
             JObject inventoryJO = JObject.Parse(json);
             if (!(bool)inventoryJO["success"])
                 goto FireCallback;
-            foreach(JProperty itemProperty in inventoryJO["rgInventory"])
+            foreach (JProperty itemProperty in inventoryJO["rgInventory"])
             {
                 JObject itemJO = (JObject) itemProperty.Value;
                 string descriptionName = itemJO["classid"] + "_" + itemJO["instanceid"];
@@ -71,6 +88,7 @@ namespace SteamTrade.Inventory
                     items.AddRange(moreInv.Items);
             }
             InventoryLoaded = true;
+            this.Items = items;
             FireCallback:
             callback(this);
         }
@@ -98,18 +116,20 @@ namespace SteamTrade.Inventory
             item.IsTradable = (bool) descriptionJo["tradable"];
             item.Type = (string) descriptionJo["type"];
             string desc = "";
-            foreach (JProperty jDesc in descriptionJo["descriptions"])
+            if (descriptionJo["descriptions"].Type == JTokenType.Array)
             {
-                if (desc == null)
-                    desc = (string)((JObject)jDesc.Value)["value"];
-                else
-                    desc += "\n" + (string)((JObject)jDesc.Value)["value"];
+                foreach (JObject descJO in descriptionJo["descriptions"])
+                {
+                    if (desc == null)
+                        desc = (string)descJO["value"];
+                    else
+                        desc += "\n" + (string)descJO["value"];
+                }
             }
             item.Description = desc;
             List<InventoryTag> tags = new List<InventoryTag>();
-            foreach (JProperty tag in descriptionJo["tags"])
+            foreach (JObject jTag in descriptionJo["tags"])
             {
-                JObject jTag = (JObject)tag.Value;
                 InventoryTag nTag = new InventoryTag();
                 nTag.InternalName = (string)jTag["internal_name"];
                 nTag.Name = (string)jTag["name"];
