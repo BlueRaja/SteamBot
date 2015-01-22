@@ -15,8 +15,11 @@
         /// Spiral Knights inventory.
         /// Because the "types" of inventories are custom to each user, the ContextId for this InventoryType.SpiralKnights is invalid.
         /// Additionally, it means loading a SpiralKnights potentially requires many more web requests than for other games.
+        /// <remarks>Seems like inv doesn't load for contextid = 0</remarks>
         /// </summary>
         public static readonly InventoryType SpiralKnights = new InventoryType(Game.SpiralKnights, 0);
+        public static readonly InventoryType SpiralKnights_HenWen = new InventoryType(Game.SpiralKnights, 6491179);
+        public static readonly InventoryType SpiralKnights_Unclaimed = new InventoryType(Game.SpiralKnights, 4297245624);
         /// <summary>
         /// Contains all tradable Steam games
         /// </summary>
@@ -49,14 +52,14 @@
         /// A number representing the "subtype" of the inventory.  For instance, Steam coupons, Steam backgrounds/emotes/cards,
         /// and Steam gifts all have different context id's.
         /// </summary>
-        public readonly int ContextId;
+        public readonly long ContextId;
 
         /// <summary>
         /// The game which this type of inventory belongs to
         /// </summary>
         public readonly Game Game;
 
-        private InventoryType(Game game, int contextId)
+        private InventoryType(Game game, long contextId)
         {
             Game = game;
             ContextId = contextId;
