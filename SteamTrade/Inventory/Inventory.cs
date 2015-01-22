@@ -115,6 +115,10 @@ namespace SteamTrade.Inventory
             item.NameColor = (string) descriptionJo["name_color"];
             item.IsTradable = (bool) descriptionJo["tradable"];
             item.Type = (string) descriptionJo["type"];
+            if (this.InventoryType.Game != Game.SpiralKnights)
+                item.Amount = 1;
+            else
+                item.Amount = (ulong)itemJo["amount"];
             string desc = "";
             if (descriptionJo["descriptions"].Type == JTokenType.Array)
             {

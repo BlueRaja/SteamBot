@@ -9,6 +9,7 @@ namespace SteamTrade.Inventory
     {
         public InventoryType InventoryType { get; internal set; }
         public string DisplayName { get; internal set; }
+        public ulong Amount { get; set; }
         public string OriginalName { get; internal set; }
         public bool IsTradable { get; internal set; }
         public bool IsMarketable { get; internal set; }
