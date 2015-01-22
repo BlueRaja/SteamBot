@@ -54,11 +54,14 @@
     <Compile Include="Exceptions\TradeException.cs" />
     <Compile Include="ForeignInventory.cs" />
     <Compile Include="GenericInventory.cs" />
+    <Compile Include="Inventory\FetchType.cs" />
     <Compile Include="Inventory\Game.cs" />
     <Compile Include="Inventory\InventoryItem.cs" />
     <Compile Include="Inventory\InventoryJsonDownloader.cs" />
     <Compile Include="Inventory\InventoryJsonParser.cs" />
+    <Compile Include="Inventory\InventoryTag.cs" />
     <Compile Include="Inventory\InventoryType.cs" />
+    <Compile Include="Inventory\ItemInventory.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="Schema.cs" />
     <Compile Include="Inventory_OLD.cs" />
@@ -74,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Inventory\Example JSON\Dota2.json" />
+    <None Include="Inventory\Example JSON\CSGO.json" />
     <None Include="Inventory\Example JSON\Steam_Community.json" />
     <None Include="Inventory\Example JSON\Steam_Gifts.json" />
     <None Include="Inventory\Example JSON\TeamFortress2.json" />

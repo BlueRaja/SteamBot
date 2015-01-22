@@ -58,10 +58,10 @@ namespace SteamTrade.Inventory
         /// Returns the inventory/json response for the given user/inventoryType.
         /// Only works when the user's backpack is non-private.
         /// </summary>
-        public string GetInventoryJson(SteamID owner, InventoryType inventoryType)
+        public string GetInventoryJson(SteamID owner, InventoryType inventoryType, ulong start)
         {
-            string url = String.Format(@"http://steamcommunity.com/profiles/{0}/inventory/json/{1}/{2}/",
-                owner.ConvertToUInt64(), inventoryType.Game, inventoryType.ContextId);
+            string url = String.Format(@"http://steamcommunity.com/profiles/{0}/inventory/json/{1}/{2}/?start={3}",
+                owner.ConvertToUInt64(), inventoryType.Game, inventoryType.ContextId, start);
 
             return _steamWeb.Fetch(url, "GET");
         }

@@ -2,17 +2,55 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using SteamKit2;
 
 namespace SteamTrade.Inventory
 {
-    public class InventoryJsonParser
+    public class Inventory
     {
-        public IEnumerable<InventoryItem> Parse(string inventoryJson)
-        {
-            List<InventoryItem> items = new List<InventoryItem>();
-            JObject inventoryJO = JObject.Parse(inventoryJson);
+        public delegate void OnInventoryLoaded(Inventory inventory);
 
+        public SteamID InventoryOwner { get; private set; }
+        public InventoryType InventoryType { get; private set; }
+        public IEnumerable<InventoryItem> Items { get; private set; }
+        public bool InventoryLoaded { get; private set; }
+
+        private SteamWeb web;
+        private FetchType fType;
+        private ulong start;
+
+        public Inventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            this.web = web;
+            InventoryOwner = owner;
+            InventoryType = type;
+            this.fType = fType;
+            start = iStart;
+        }
+
+        public Task Parse(OnInventoryLoaded callback)
+        {
+            InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
+            string json = null;
+            switch (fType)
+            {
+                case FetchType.Inventory:
+                    json = downloader.GetInventoryJson(InventoryOwner, InventoryType, start);
+                    break;
+                case FetchType.TradeInventory:
+                    json = downloader.GetTradeInventoryJson(InventoryOwner, InventoryType);
+                    break;
+                case FetchType.TradeOfferInventory:
+                    json = downloader.GetTradeOfferInventoryJson(InventoryOwner, InventoryType);
+                    break;
+            }
+            List<InventoryItem> items = new List<InventoryItem>();
+            JObject inventoryJO = JObject.Parse(json);
+            if (!(bool)inventoryJO["success"])
+                return null;
             foreach(JProperty itemProperty in inventoryJO["rgInventory"])
             {
                 JObject itemJO = (JObject) itemProperty.Value;
@@ -22,13 +60,27 @@ namespace SteamTrade.Inventory
                 InventoryItem item = GenerateItemFromJson(itemJO, descriptionJO);
                 items.Add(item);
             }
+            if ((bool)inventoryJO["more"])
+            {
+                Inventory moreInv = new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
+                moreInv.Parse(this.MoreInvLoaded);
+                while (!moreInv.InventoryLoaded)
+                    Thread.Yield();
+                items.AddRange(moreInv.Items);
+            }
+            callback(this);
+            InventoryLoaded = true;
+        }
 
-            return items;
+        private void MoreInvLoaded(Inventory inventory)
+        {
+            Console.WriteLine("Loaded " + inventory.Items.Count() + " more items.");
         }
 
         private InventoryItem GenerateItemFromJson(JObject itemJo, JObject descriptionJo)
         {
             InventoryItem item = new InventoryItem();
+            item.InventoryType = invType;
             item.Id = (long) itemJo["id"];
             item.InventoryPosition = (int) itemJo["pos"];
 
