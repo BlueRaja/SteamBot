@@ -18,8 +18,6 @@
         /// <remarks>Seems like inv doesn't load for contextid = 0</remarks>
         /// </summary>
         public static readonly InventoryType SpiralKnights = new InventoryType(Game.SpiralKnights, 0);
-        public static readonly InventoryType SpiralKnights_HenWen = new InventoryType(Game.SpiralKnights, 6491179);
-        public static readonly InventoryType SpiralKnights_Unclaimed = new InventoryType(Game.SpiralKnights, 4297245624);
         /// <summary>
         /// Contains all tradable Steam games
         /// </summary>
