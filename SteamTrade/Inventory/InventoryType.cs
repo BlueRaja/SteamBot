@@ -1,4 +1,5 @@
-﻿namespace SteamTrade.Inventory
+﻿using System;
+namespace SteamTrade.Inventory
 {
     /// <summary>
     /// A single game may have multiple "types" of inventories.  This immutable class represents a specific inventory type for a specific game.
@@ -56,6 +57,17 @@
         /// The game which this type of inventory belongs to
         /// </summary>
         public readonly Game Game;
+
+        public static InventoryType GetTypeFromString(string sType)
+        {
+            var type = typeof(InventoryType);
+            var invType = type.GetField(sType);
+            if (!invType.IsStatic)
+                throw new Exception("Inventory type is not static!");
+            else if (invType.FieldType != type)
+                throw new Exception("Field is not of InventoryType");
+            return invType.GetValue(null) as InventoryType;
+        }
 
         private InventoryType(Game game, long contextId)
         {

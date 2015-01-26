@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SteamKit2;
+using SteamTrade.Exceptions;
 
 namespace SteamTrade.Inventory
 {
@@ -32,25 +33,62 @@ namespace SteamTrade.Inventory
             start = iStart;
         }
 
-        public static void FetchInventories(IEnumerable<Inventory> inventories, OnInventoryLoaded callback)
+        public static Inventory FetchInventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory)
+        {
+            Inventory inv = new Inventory(web, owner, type, fType);
+            inv.FetchInventory();
+            return inv;
+        }
+
+        public static void FetchInventories(IEnumerable<Inventory> inventories)
         {
             foreach (Inventory inv in inventories)
-                inv.FetchInventory(callback);
+                inv.FetchInventory();
         }
 
-        public static void FetchInventories(SteamWeb web, SteamID owner, OnInventoryLoaded callback, IEnumerable<InventoryType> invTypes, FetchType fType = FetchType.Inventory)
+        public static IEnumerable<Inventory> FetchInventories(SteamWeb web, SteamID owner, IEnumerable<InventoryType> invTypes, FetchType fType = FetchType.Inventory)
+        {
+            List<Inventory> invs = new List<Inventory>();
+            foreach (InventoryType type in invTypes)
+                invs.Add(Inventory.FetchInventory(web, owner, type, fType));
+            return invs;
+        }
+
+#pragma warning disable 4014
+        public static void QuickFetchInventory(Inventory inventory, OnInventoryLoaded callback)
+        {
+            inventory.FetchInventoryAsync(callback);
+        }
+
+        public static void QuickFetchInventory(SteamWeb web, SteamID owner, OnInventoryLoaded callback, InventoryType type, FetchType fType = FetchType.Inventory)
+        {
+            new Inventory(web, owner, type, fType).FetchInventoryAsync(callback);
+        }
+
+        public static void QuickFetchInventories(IEnumerable<Inventory> inventories, OnInventoryLoaded callback)
+        {
+            foreach (Inventory inv in inventories)
+                inv.FetchInventoryAsync(callback);
+        }
+
+        public static void QuickFetchInventories(SteamWeb web, SteamID owner, OnInventoryLoaded callback, IEnumerable<InventoryType> invTypes, FetchType fType = FetchType.Inventory)
         {
             foreach (InventoryType type in invTypes)
-                new Inventory(web, owner, type, fType).FetchInventory(callback);
+                new Inventory(web, owner, type, fType).FetchInventoryAsync(callback);
         }
+#pragma warning restore 4014
 
-        public async void FetchInventory(OnInventoryLoaded callback)
+        public void FetchInventory()
         {
-            await Parse(callback);
+            Parse();
         }
 
-#pragma warning disable 4014, 1998
-        private async Task Parse(OnInventoryLoaded callback)
+        public async Task FetchInventoryAsync(OnInventoryLoaded callback)
+        {
+            await ParseAsync(callback);
+        }
+
+        private void Parse()
         {
             InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
             string json = null;
@@ -69,7 +107,48 @@ namespace SteamTrade.Inventory
             List<InventoryItem> items = new List<InventoryItem>();
             JObject inventoryJO = JObject.Parse(json);
             if (!(bool)inventoryJO["success"])
-                goto FireCallback;
+                throw new InventoryFetchException(this.InventoryOwner);
+            foreach (JProperty itemProperty in inventoryJO["rgInventory"])
+            {
+                JObject itemJO = (JObject)itemProperty.Value;
+                string descriptionName = itemJO["classid"] + "_" + itemJO["instanceid"];
+                JObject descriptionJO = (JObject)inventoryJO["rgDescriptions"][descriptionName];
+                InventoryItem item = GenerateItemFromJson(itemJO, descriptionJO);
+                items.Add(item);
+            }
+            if ((bool)inventoryJO["more"])
+            {
+                Inventory moreInv = new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
+                moreInv.FetchInventory();
+                while (!callbackFired)
+                    Thread.Yield();
+                if (moreInv.InventoryLoaded)
+                    items.AddRange(moreInv.Items);
+            }
+            InventoryLoaded = true;
+            this.Items = items;
+        }
+
+        private async Task ParseAsync(OnInventoryLoaded callback)
+        {
+            InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
+            string json = null;
+            switch (fType)
+            {
+                case FetchType.Inventory:
+                    json = await downloader.GetInventoryJsonAsync(InventoryOwner, InventoryType, start);
+                    break;
+                case FetchType.TradeInventory:
+                    json = await downloader.GetTradeInventoryJsonAsync(InventoryOwner, InventoryType);
+                    break;
+                case FetchType.TradeOfferInventory:
+                    json = await downloader.GetTradeOfferInventoryJsonAsync(InventoryOwner, InventoryType);
+                    break;
+            }
+            List<InventoryItem> items = new List<InventoryItem>();
+            JObject inventoryJO = JObject.Parse(json);
+            if (!(bool)inventoryJO["success"])
+                throw new InventoryFetchException(this.InventoryOwner);
             foreach (JProperty itemProperty in inventoryJO["rgInventory"])
             {
                 JObject itemJO = (JObject) itemProperty.Value;
@@ -81,7 +160,9 @@ namespace SteamTrade.Inventory
             if ((bool)inventoryJO["more"])
             {
                 Inventory moreInv = new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
-                moreInv.Parse(this.MoreInvLoaded);
+#pragma warning disable 4014
+                moreInv.FetchInventoryAsync(this.MoreInvLoaded);
+#pragma warning restore
                 while (!callbackFired)
                     Thread.Yield();
                 if (moreInv.InventoryLoaded)
@@ -89,10 +170,9 @@ namespace SteamTrade.Inventory
             }
             InventoryLoaded = true;
             this.Items = items;
-            FireCallback:
             callback(this);
         }
-#pragma warning restore
+
         private void MoreInvLoaded(Inventory inventory)
         {
             Console.WriteLine("Loaded " + inventory.Items.Count() + " more items.");

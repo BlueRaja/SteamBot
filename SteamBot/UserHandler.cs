@@ -8,6 +8,8 @@ using SteamKit2;
 using SteamTrade;
 using SteamBot.Logging;
 using SteamTrade.TradeOffer;
+using System.Collections.Generic;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -21,7 +23,7 @@ namespace SteamBot
         public SteamID OtherSID { get; private set; }
 
         private bool _lastMessageWasFromTrade;
-        private Task<Inventory_OLD> otherInventoryTask;
+        protected List<Inventory> OtherLoadedInventories = new List<Inventory>();
 
         protected SteamWeb SteamWeb
         {
@@ -39,36 +41,35 @@ namespace SteamBot
         {
             Bot = bot;
             OtherSID = sid;
-            GetOtherInventory();
+            LoadOtherInventories();
         }
 
         /// <summary>
-        /// Gets the other's inventory and stores it in OtherInventory.
+        /// This loads the other user's inventories from the bot's config.
         /// </summary>
-        /// <example> This sample shows how to find items in the other's inventory from a user handler.
-        /// <code>
-        /// GetInventory(); // Not necessary unless you know the user's inventory has changed
-        /// foreach (var item in OtherInventory)
-        /// {
-        ///     if (item.Defindex == 5021)
-        ///     {
-        ///         // Bot has a key in its inventory
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
-        public void GetOtherInventory()
+        public void LoadOtherInventories()
         {
-            otherInventoryTask = Task.Factory.StartNew(() =>Inventory_OLD.FetchInventory(OtherSID, Bot.ApiKey, SteamWeb));
+            List<InventoryType> types = new List<InventoryType>();
+            foreach (string inv in Bot.InventoriesToLoad)
+                types.Add(InventoryType.GetTypeFromString(inv));
+            OtherLoadedInventories = Inventory.FetchInventories(SteamWeb, OtherSID, types) as List<Inventory>;
         }
 
-        public Inventory_OLD OtherInventory
+        /// <summary>
+        /// This loads the other user's inventories from the bot's config.
+        /// </summary>
+        public void QuickLoadOtherInventories()
         {
-            get
-            {
-                otherInventoryTask.Wait();
-                return otherInventoryTask.Result;
-            }
+            List<InventoryType> types = new List<InventoryType>();
+            foreach (string inv in Bot.InventoriesToLoad)
+                types.Add(InventoryType.GetTypeFromString(inv));
+            Inventory.QuickFetchInventories(SteamWeb, OtherSID, OnInventoryLoaded, types);
+        }
+
+        private void OnInventoryLoaded(Inventory inventory)
+        {
+            if (inventory != null && inventory.Items != null)
+                OtherLoadedInventories.Add(inventory);
         }
 
         /// <summary>

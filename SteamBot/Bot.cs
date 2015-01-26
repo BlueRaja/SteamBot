@@ -14,6 +14,7 @@ using SteamTrade;
 using SteamKit2.Internal;
 using SteamTrade.TradeOffer;
 using SteamBot.Logging;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -48,6 +49,8 @@ namespace SteamBot
 
         // The log for the bot.  This logs with the bot's display name.
         public Log log;
+        public string[] InventoriesToLoad { get; private set; }
+        public List<Inventory> MyLoadedInventories = new List<Inventory>();
         private string logFile;
 
         public delegate UserHandler UserHandlerCreator(Bot bot, SteamID id);
@@ -103,16 +106,6 @@ namespace SteamBot
 
         TradeManager tradeManager;
         private TradeOfferManager tradeOfferManager;
-        private Task<Inventory_OLD> myInventoryTask;
-
-        public Inventory_OLD MyInventory
-        {
-            get
-            {
-                myInventoryTask.Wait();
-                return myInventoryTask.Result;
-            }
-        }
 
         private BackgroundWorker backgroundWorker;
 
@@ -130,6 +123,7 @@ namespace SteamBot
             DisplayNamePrefix = config.DisplayNamePrefix;
             TradePollingInterval = config.TradePollingInterval <= 100 ? 800 : config.TradePollingInterval;
             Admins = config.Admins;
+            InventoriesToLoad = config.Inventories;
             this.ApiKey = !String.IsNullOrEmpty(config.ApiKey) ? config.ApiKey : apiKey;
             this.isprocess = process;
 
@@ -467,7 +461,7 @@ namespace SteamBot
                     Trade.CurrentSchema = Schema.FetchSchema (ApiKey);
                     log.Success("Schema Downloaded!");
                 }
-
+                QuickLoadMyInventories();
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
                 SteamFriends.SetPersonaState(EPersonaState.Online);
 
@@ -826,26 +820,6 @@ namespace SteamBot
             SteamUser.SendMachineAuthResponse(authResponse);
         }
 
-        /// <summary>
-        /// Gets the bot's inventory and stores it in MyInventory.
-        /// </summary>
-        /// <example> This sample shows how to find items in the bot's inventory from a user handler.
-        /// <code>
-        /// Bot.GetInventory(); // Get the inventory first
-        /// foreach (var item in Bot.MyInventory.Items)
-        /// {
-        ///     if (item.Defindex == 5021)
-        ///     {
-        ///         // Bot has a key in its inventory
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
-        public void GetInventory()
-        {
-            myInventoryTask = Task.Factory.StartNew(() => Inventory_OLD.FetchInventory(SteamUser.SteamID, ApiKey, SteamWeb));
-        }
-
         public void TradeOfferRouter(TradeOffer offer)
         {
             if (offer.OfferState == TradeOfferState.TradeOfferStateActive)
@@ -856,6 +830,34 @@ namespace SteamBot
         public void SubscribeTradeOffer(TradeOfferManager tradeOfferManager)
         {
             tradeOfferManager.OnNewTradeOffer += TradeOfferRouter;
+        }
+
+        /// <summary>
+        /// This loads the other user's inventories from the bot's config.
+        /// </summary>
+        public void LoadMyInventories()
+        {
+            List<InventoryType> types = new List<InventoryType>();
+            foreach (string inv in InventoriesToLoad)
+                types.Add(InventoryType.GetTypeFromString(inv));
+            MyLoadedInventories = Inventory.FetchInventories(SteamWeb, SteamUser.SteamID, types) as List<Inventory>;
+        }
+
+        /// <summary>
+        /// This loads the other user's inventories from the bot's config.
+        /// </summary>
+        public void QuickLoadMyInventories()
+        {
+            List<InventoryType> types = new List<InventoryType>();
+            foreach (string inv in InventoriesToLoad)
+                types.Add(InventoryType.GetTypeFromString(inv));
+            Inventory.QuickFetchInventories(SteamWeb, SteamUser.SteamID, OnInventoryLoaded, types);
+        }
+
+        private void OnInventoryLoaded(Inventory inventory)
+        {
+            if (inventory != null && inventory.Items != null)
+                MyLoadedInventories.Add(inventory);
         }
 
         //todo: should unsubscribe eventually...

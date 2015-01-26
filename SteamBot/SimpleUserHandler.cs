@@ -36,7 +36,6 @@ namespace SteamBot
         
         public override void OnMessage (string message, EChatEntryType type) 
         {
-            Inventory.FetchInventories(SteamWeb, OtherSID, OnInvCallback, new InventoryType[]{InventoryType.TeamFortress2, InventoryType.CSGO});
             SendChatMessage(Bot.ChatResponse);
         }
 

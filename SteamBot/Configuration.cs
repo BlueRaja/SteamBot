@@ -131,6 +131,7 @@ namespace SteamBot
             public string ConsoleLogLevel { get; set; }
             public string FileLogLevel { get; set; }
             public ulong[] Admins { get; set; }
+            public string[] Inventories { get; set; }
 
             // Depreciated configuration options
             public string LogLevel { get; set; }
