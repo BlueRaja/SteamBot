@@ -90,6 +90,7 @@ namespace SteamTrade.Inventory
 
         private void Parse()
         {
+            Console.WriteLine(fType);
             InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
             string json = null;
             switch (fType)
@@ -105,7 +106,15 @@ namespace SteamTrade.Inventory
                     break;
             }
             List<InventoryItem> items = new List<InventoryItem>();
-            JObject inventoryJO = JObject.Parse(json);
+            JObject inventoryJO = null;
+            try
+            {
+                inventoryJO = JObject.Parse(json);
+            }
+            catch (Exception)
+            {
+                return;
+            }
             if (!(bool)inventoryJO["success"])
                 throw new InventoryFetchException(this.InventoryOwner);
             foreach (JProperty itemProperty in inventoryJO["rgInventory"])
@@ -146,7 +155,15 @@ namespace SteamTrade.Inventory
                     break;
             }
             List<InventoryItem> items = new List<InventoryItem>();
-            JObject inventoryJO = JObject.Parse(json);
+            JObject inventoryJO = null;
+            try
+            {
+                inventoryJO = JObject.Parse(json);
+            }
+            catch (Exception)
+            {
+                return;
+            }
             if (!(bool)inventoryJO["success"])
                 throw new InventoryFetchException(this.InventoryOwner);
             foreach (JProperty itemProperty in inventoryJO["rgInventory"])

@@ -66,8 +66,6 @@
     <Compile Include="Inventory\InventoryTag.cs" />
     <Compile Include="Inventory\InventoryType.cs" />
     <Compile Include="Trade.cs" />
-    <Compile Include="Schema.cs" />
-    <Compile Include="Inventory_OLD.cs" />
     <Compile Include="SteamWeb.cs" />
     <Compile Include="TradeOffer\OfferSession.cs" />
     <Compile Include="TradeOffer\TradeOffer.cs" />
