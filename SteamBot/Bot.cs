@@ -454,13 +454,6 @@ namespace SteamBot
                 MyUniqueId = callback.UniqueID.ToString();
 
                 UserWebLogOn();
-
-                if (Trade.CurrentSchema == null)
-                {
-                    log.Info("Downloading Schema...");
-                    Trade.CurrentSchema = Schema.FetchSchema (ApiKey);
-                    log.Success("Schema Downloaded!");
-                }
                 QuickLoadMyInventories();
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
                 SteamFriends.SetPersonaState(EPersonaState.Online);
@@ -720,7 +713,7 @@ namespace SteamBot
 
                     log.Success("User Authenticated!");
 
-                    tradeManager = new TradeManager(ApiKey, SteamWeb);
+                    tradeManager = new TradeManager(ApiKey, SteamWeb, InventoriesToLoad);
                     tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
                     tradeManager.OnTimeout += OnTradeTimeout;
 

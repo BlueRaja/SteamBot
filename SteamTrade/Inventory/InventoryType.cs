@@ -69,7 +69,7 @@ namespace SteamTrade.Inventory
             return invType.GetValue(null) as InventoryType;
         }
 
-        private InventoryType(Game game, long contextId)
+        public InventoryType(Game game, long contextId)
         {
             Game = game;
             ContextId = contextId;

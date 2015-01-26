@@ -71,9 +71,9 @@ namespace SteamBot
             SendTradeMessage("Success. Please put up your items.");
         }
         
-        public override void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) {}
+        public override void OnTradeAddItem (InventoryItem inventoryItem) {}
         
-        public override void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) {}
+        public override void OnTradeRemoveItem (InventoryItem inventoryItem) {}
         
         public override void OnTradeMessage (string message) {}
         
@@ -123,18 +123,15 @@ namespace SteamBot
             
             foreach (TradeUserAssets asset in Trade.OtherOfferedItems)
             {
-                var item = Trade.OtherInventory.GetItem(asset.assetid);
-                if (item.Defindex == 5000)
+                var item = Trade.GetOtherItem(asset.assetid);
+                if (item.OriginalName.Equals("Scrap Metal"))
                     ScrapPutUp++;
-                else if (item.Defindex == 5001)
+                else if (item.OriginalName.Equals("Reclaimed Metal"))
                     ScrapPutUp += 3;
-                else if (item.Defindex == 5002)
+                else if (item.OriginalName.Equals("Refined Metal"))
                     ScrapPutUp += 9;
                 else
-                {
-                    var schemaItem = Trade.CurrentSchema.GetItem (item.Defindex);
-                    errors.Add ("Item " + schemaItem.Name + " is not a metal.");
-                }
+                    errors.Add ("Item " + item.DisplayName + " is not a metal.");
             }
             
             if (ScrapPutUp < 1)

@@ -220,9 +220,9 @@ namespace SteamBot
 
         public abstract void OnTradeInit ();
 
-        public abstract void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
+        public abstract void OnTradeAddItem (InventoryItem inventoryItem);
 
-        public abstract void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
+        public abstract void OnTradeRemoveItem (InventoryItem inventoryItem);
 
         public void OnTradeMessageHandler(string message)
         {

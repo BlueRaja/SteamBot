@@ -183,7 +183,7 @@ namespace SteamTrade.Inventory
         {
             InventoryItem item = new InventoryItem();
             item.InventoryType = InventoryType;
-            item.Id = (long) itemJo["id"];
+            item.Id = (ulong) itemJo["id"];
             item.InventoryPosition = (int) itemJo["pos"];
 
             item.BackgroundColor = (string) descriptionJo["background_color"];
@@ -221,6 +221,16 @@ namespace SteamTrade.Inventory
             }
             item.Tags = tags.ToArray();
             return item;
+        }
+
+        public InventoryItem GetItem(ulong assetId)
+        {
+            foreach (var item in Items)
+            {
+                if (item.Id == assetId)
+                    return item;
+            }
+            return null;
         }
     }
 }

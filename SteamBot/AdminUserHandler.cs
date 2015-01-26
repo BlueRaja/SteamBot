@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using SteamKit2;
 using SteamTrade;
 using System.Collections.Generic;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -102,12 +103,12 @@ namespace SteamBot
             SendTradeMessage("Success. (Type {0} for commands)", HelpCmd);
         }
 
-        public override void OnTradeAddItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem)
+        public override void OnTradeAddItem(InventoryItem inventoryItem)
         {
             // whatever.   
         }
 
-        public override void OnTradeRemoveItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem)
+        public override void OnTradeRemoveItem(InventoryItem inventoryItem)
         {
             // whatever.
         }
@@ -206,29 +207,6 @@ namespace SteamBot
                 Trade.AddAllItemsByDefindex(defindex, amount);
                 return;
             }
-
-            switch (typeToAdd)
-            {
-                case AddMetalSubCmd:
-                    AddItemsByCraftType("craft_bar", amount);
-                    break;
-                case AddWepsSubCmd:
-                    AddItemsByCraftType("weapon", amount);
-                    break;
-                case AddCratesSubCmd:
-                    // data[3] is the optional series number
-                    if (!String.IsNullOrEmpty(data[3]))
-                        AddCrateBySeries(data[3], amount);
-                    else
-                        AddItemsByCraftType("supply_crate", amount);
-                    break;
-                case AddAllSubCmd:
-                    AddAllItems();
-                    break;
-                default:
-                    AddItemsByCraftType(typeToAdd, amount);
-                    break;
-            }
         }
 
 
@@ -246,79 +224,6 @@ namespace SteamBot
 
             if (!subCmdOk)
                 return;
-        }
-
-
-        private void AddItemsByCraftType(string typeToAdd, uint amount)
-        {
-            var items = Trade.CurrentSchema.GetItemsByCraftingMaterial(typeToAdd);
-
-            uint added = 0;
-
-            foreach (var item in items)
-            {
-                added += Trade.AddAllItemsByDefindex(item.Defindex, amount);
-
-                // if bulk adding something that has a lot of unique
-                // defindex (weapons) we may over add so limit here also
-                if (amount > 0 && added >= amount)
-                    return;
-            }
-        }
-
-        private void AddAllItems()
-        {
-            var items = Trade.CurrentSchema.GetItems();
-
-            foreach (var item in items)
-            {
-                Trade.AddAllItemsByDefindex(item.Defindex, 0);
-            }
-        }
-
-        private void AddCrateBySeries(string series, uint amount)
-        {
-            int ser;
-            bool parsed = int.TryParse(series, out ser);
-
-            if (!parsed)
-                return;
-
-            var l = Trade.CurrentSchema.GetItemsByCraftingMaterial("supply_crate");
-
-
-            List<Inventory_OLD.Item> invItems = new List<Inventory_OLD.Item>();
-
-            foreach (var schemaItem in l)
-            {
-                ushort defindex = schemaItem.Defindex;
-                invItems.AddRange(Trade.MyInventory.GetItemsByDefindex(defindex));
-            }
-
-            uint added = 0;
-
-            foreach (var item in invItems)
-            {
-                int crateNum = 0;
-                for (int count = 0; count < item.Attributes.Length; count++)
-                {
-                    // FloatValue will give you the crate's series number
-                    crateNum = (int) item.Attributes[count].FloatValue;
-
-                    if (crateNum == ser)
-                    {
-                        bool ok = Trade.AddItem(item.Id);
-
-                        if (ok)
-                            added++;
-
-                        // if bulk adding something that has a lot of unique
-                        // defindex (weapons) we may over add so limit here also
-                        if (amount > 0 && added >= amount)
-                            return;
-                    }
-                }
-            }
         }
 
         bool GetSubCommand (string[] data, out string subCommand)
