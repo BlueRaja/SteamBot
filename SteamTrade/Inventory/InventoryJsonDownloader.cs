@@ -30,11 +30,11 @@ namespace SteamTrade.Inventory
             switch (fType)
             {
                 case FetchType.Inventory:
-                    return GetInventoryJson(owner, type, start);
+                    return GetInventoryJsonAsync(owner, type, start).Result;
                 case FetchType.TradeInventory:
-                    return GetTradeInventoryJson(owner, type);
+                    return GetTradeInventoryJsonAsync(owner, type).Result;
                 case FetchType.TradeOfferInventory:
-                    return GetTradeOfferInventoryJson(owner, type);
+                    return GetTradeOfferInventoryJsonAsync(owner, type).Result;
                 default:
                     return null;
             }
@@ -53,25 +53,6 @@ namespace SteamTrade.Inventory
                 default:
                     return null;
             }
-        }
-
-        /// <summary>
-        /// Returns the inventory/json response for the given user/inventoryType.
-        /// Works even when the user has a private backback.  However, only works if user sent us a trade offer.
-        /// </summary>
-        private string GetTradeOfferInventoryJson(SteamID owner, InventoryType inventoryType)
-        {
-            string url = @"http://steamcommunity.com/tradeoffer/new/partnerinventory/";
-
-            var data = new NameValueCollection
-            {
-                { "sessionid", _steamWeb.SessionId },
-                { "partner", owner.ConvertToUInt64().ToString() },
-                { "appid", ((ulong)inventoryType.Game).ToString() },
-                { "contextid", inventoryType.ContextId.ToString() }
-            };
-
-            return _steamWeb.Fetch(url, "GET", data);
         }
 
         /// <summary>
@@ -97,25 +78,6 @@ namespace SteamTrade.Inventory
         /// Returns the inventory/json response for the given user/inventoryType.
         /// Works even when the user has a private backback.  However, only works if we are currently trading with that user.
         /// </summary>
-        private string GetTradeInventoryJson(SteamID owner, InventoryType inventoryType)
-        {
-            string url = String.Format(@"http://steamcommunity.com/trade/{0}/foreigninventory/", owner.ConvertToUInt64());
-
-            var data = new NameValueCollection
-            {
-                { "sessionid", _steamWeb.SessionId },
-                { "steamid", owner.ConvertToUInt64().ToString() },
-                { "appid", ((ulong)inventoryType.Game).ToString() },
-                { "contextid", inventoryType.ContextId.ToString() }
-            };
-
-            return _steamWeb.Fetch(url, "GET", data);
-        }
-
-        /// <summary>
-        /// Returns the inventory/json response for the given user/inventoryType.
-        /// Works even when the user has a private backback.  However, only works if we are currently trading with that user.
-        /// </summary>
         private async Task<string> GetTradeInventoryJsonAsync(SteamID owner, InventoryType inventoryType)
         {
             string url = String.Format(@"http://steamcommunity.com/trade/{0}/foreigninventory/", owner.ConvertToUInt64());
@@ -129,17 +91,6 @@ namespace SteamTrade.Inventory
             };
 
             return await _steamWeb.FetchAsync(url, "GET", data);
-        }
-
-        /// <summary>
-        /// Returns the inventory/json response for the given user/inventoryType.
-        /// Only works when the user's backpack is non-private.
-        /// </summary>
-        private string GetInventoryJson(SteamID owner, InventoryType inventoryType, ulong start)
-        {
-            string url = String.Format(@"http://steamcommunity.com/profiles/{0}/inventory/json/{1}/{2}/?start={3}",
-                owner.ConvertToUInt64(), (ulong)inventoryType.Game, inventoryType.ContextId, start);
-            return _steamWeb.Fetch(url, "GET");
         }
 
         /// <summary>

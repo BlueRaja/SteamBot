@@ -43,40 +43,14 @@ namespace SteamTrade.Inventory
 
         public void FetchInventory()
         {
-            Parse();
+            ParseAsync(delegate(CInventory inventory)
+            {
+            }).Wait();
         }
 
         public async Task FetchInventoryAsync(OnInventoryLoaded callback)
         {
             await ParseAsync(callback);
-        }
-
-        private void Parse()
-        {
-            string json = new InventoryJsonDownloader(web).GetInventoryJsonDynamic(InventoryOwner, InventoryType, start, fType);
-            if (json == null)
-                throw new InventoryFetchException(this.InventoryOwner);
-            List<InventoryItem> items = new List<InventoryItem>();
-            JObject inventoryJO = JObject.Parse(json);
-            if (!(bool)inventoryJO["success"])
-                throw new InventoryFetchException(this.InventoryOwner);
-            foreach (JProperty itemProperty in inventoryJO["rgInventory"])
-            {
-                JObject itemJO = (JObject)itemProperty.Value;
-                string descriptionName = itemJO["classid"] + "_" + itemJO["instanceid"];
-                JObject descriptionJO = (JObject)inventoryJO["rgDescriptions"][descriptionName];
-                InventoryItem item = GenerateItemFromJson(itemJO, descriptionJO);
-                items.Add(item);
-            }
-            if ((bool)inventoryJO["more"])
-            {
-                CInventory moreInv = new CInventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
-                moreInv.FetchInventory();
-                if (moreInv.InventoryLoaded)
-                    items.AddRange(moreInv.Items);
-            }
-            invLoaded = true;
-            this.Items = items;
         }
 
         private async Task ParseAsync(OnInventoryLoaded callback)
