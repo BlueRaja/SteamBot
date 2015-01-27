@@ -10,21 +10,29 @@ using SteamTrade.Exceptions;
 
 namespace SteamTrade.Inventory
 {
-    public class Inventory
+    public class CInventory
     {
-        public delegate void OnInventoryLoaded(Inventory inventory);
+        public delegate void OnInventoryLoaded(CInventory inventory);
 
         public SteamID InventoryOwner { get; private set; }
         public InventoryType InventoryType { get; private set; }
         public IEnumerable<InventoryItem> Items { get; private set; }
-        public bool InventoryLoaded { get; private set; }
+        private bool invLoaded;
 
         private SteamWeb web;
         private FetchType fType;
         private ulong start;
         private bool callbackFired;
 
-        public Inventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        public bool InventoryLoaded
+        {
+            get
+            {
+                return invLoaded && Items != null && Items.Count() > 0;
+            }
+        }
+
+        public CInventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory, ulong iStart = 0)
         {
             this.web = web;
             InventoryOwner = owner;
@@ -32,51 +40,6 @@ namespace SteamTrade.Inventory
             this.fType = fType;
             start = iStart;
         }
-
-        public static Inventory FetchInventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory)
-        {
-            Inventory inv = new Inventory(web, owner, type, fType);
-            inv.FetchInventory();
-            return inv;
-        }
-
-        public static void FetchInventories(IEnumerable<Inventory> inventories)
-        {
-            foreach (Inventory inv in inventories)
-                inv.FetchInventory();
-        }
-
-        public static IEnumerable<Inventory> FetchInventories(SteamWeb web, SteamID owner, IEnumerable<InventoryType> invTypes, FetchType fType = FetchType.Inventory)
-        {
-            List<Inventory> invs = new List<Inventory>();
-            foreach (InventoryType type in invTypes)
-                invs.Add(Inventory.FetchInventory(web, owner, type, fType));
-            return invs;
-        }
-
-#pragma warning disable 4014
-        public static void QuickFetchInventory(Inventory inventory, OnInventoryLoaded callback)
-        {
-            inventory.FetchInventoryAsync(callback);
-        }
-
-        public static void QuickFetchInventory(SteamWeb web, SteamID owner, OnInventoryLoaded callback, InventoryType type, FetchType fType = FetchType.Inventory)
-        {
-            new Inventory(web, owner, type, fType).FetchInventoryAsync(callback);
-        }
-
-        public static void QuickFetchInventories(IEnumerable<Inventory> inventories, OnInventoryLoaded callback)
-        {
-            foreach (Inventory inv in inventories)
-                inv.FetchInventoryAsync(callback);
-        }
-
-        public static void QuickFetchInventories(SteamWeb web, SteamID owner, OnInventoryLoaded callback, IEnumerable<InventoryType> invTypes, FetchType fType = FetchType.Inventory)
-        {
-            foreach (InventoryType type in invTypes)
-                new Inventory(web, owner, type, fType).FetchInventoryAsync(callback);
-        }
-#pragma warning restore 4014
 
         public void FetchInventory()
         {
@@ -88,23 +51,11 @@ namespace SteamTrade.Inventory
             await ParseAsync(callback);
         }
 
-#warning "This non-async method needs debugging as something is horrible with it."
         private void Parse()
         {
-            InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
-            string json = null;
-            switch (fType)
-            {
-                case FetchType.Inventory:
-                    json = downloader.GetInventoryJson(InventoryOwner, InventoryType, start);
-                    break;
-                case FetchType.TradeInventory:
-                    json = downloader.GetTradeInventoryJson(InventoryOwner, InventoryType);
-                    break;
-                case FetchType.TradeOfferInventory:
-                    json = downloader.GetTradeOfferInventoryJson(InventoryOwner, InventoryType);
-                    break;
-            }
+            string json = new InventoryJsonDownloader(web).GetInventoryJsonDynamic(InventoryOwner, InventoryType, start, fType);
+            if (json == null)
+                throw new InventoryFetchException(this.InventoryOwner);
             List<InventoryItem> items = new List<InventoryItem>();
             JObject inventoryJO = JObject.Parse(json);
             if (!(bool)inventoryJO["success"])
@@ -119,45 +70,25 @@ namespace SteamTrade.Inventory
             }
             if ((bool)inventoryJO["more"])
             {
-                Inventory moreInv = new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
+                CInventory moreInv = new CInventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
                 moreInv.FetchInventory();
-                while (!callbackFired)
-                    Thread.Yield();
                 if (moreInv.InventoryLoaded)
                     items.AddRange(moreInv.Items);
             }
-            InventoryLoaded = true;
+            invLoaded = true;
             this.Items = items;
         }
 
         private async Task ParseAsync(OnInventoryLoaded callback)
         {
-            InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
-            string json = null;
-            switch (fType)
-            {
-                case FetchType.Inventory:
-                    json = await downloader.GetInventoryJsonAsync(InventoryOwner, InventoryType, start);
-                    break;
-                case FetchType.TradeInventory:
-                    json = await downloader.GetTradeInventoryJsonAsync(InventoryOwner, InventoryType);
-                    break;
-                case FetchType.TradeOfferInventory:
-                    json = await downloader.GetTradeOfferInventoryJsonAsync(InventoryOwner, InventoryType);
-                    break;
-            }
+            string json = await new InventoryJsonDownloader(web).GetInventoryJsonDynamicAsync(InventoryOwner, InventoryType, start, fType);
+            if (json == null)
+                goto Callback;
             List<InventoryItem> items = new List<InventoryItem>();
             JObject inventoryJO = null;
-            try
-            {
-                inventoryJO = JObject.Parse(json);
-            }
-            catch (Exception)
-            {
-                return;
-            }
+            inventoryJO = JObject.Parse(json);
             if (!(bool)inventoryJO["success"])
-                throw new InventoryFetchException(this.InventoryOwner);
+                goto Callback;
             foreach (JProperty itemProperty in inventoryJO["rgInventory"])
             {
                 JObject itemJO = (JObject) itemProperty.Value;
@@ -168,7 +99,7 @@ namespace SteamTrade.Inventory
             }
             if ((bool)inventoryJO["more"])
             {
-                Inventory moreInv = new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
+                CInventory moreInv = new CInventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
 #pragma warning disable 4014
                 moreInv.FetchInventoryAsync(this.MoreInvLoaded);
 #pragma warning restore
@@ -177,14 +108,14 @@ namespace SteamTrade.Inventory
                 if (moreInv.InventoryLoaded)
                     items.AddRange(moreInv.Items);
             }
-            InventoryLoaded = true;
+            invLoaded = true;
             this.Items = items;
+            Callback:
             callback(this);
         }
 
-        private void MoreInvLoaded(Inventory inventory)
+        private void MoreInvLoaded(CInventory inventory)
         {
-            Console.WriteLine("Loaded " + inventory.Items.Count() + " more items.");
             this.callbackFired = true;
         }
 
@@ -240,6 +171,88 @@ namespace SteamTrade.Inventory
                     return item;
             }
             return null;
+        }
+
+        public static CInventory FetchInventory(SteamWeb web, SteamID owner, InventoryType type, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            CInventory inv = new CInventory(web, owner, type, fType, iStart);
+            inv.FetchInventory();
+            return inv;
+        }
+
+        public static async Task FetchInventoryAsync(SteamWeb web, SteamID owner, InventoryType type, OnInventoryLoaded callback, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            await new CInventory(web, owner, type, fType, iStart).FetchInventoryAsync(callback);
+        }
+
+        public static IEnumerable<CInventory> FetchInventories(SteamWeb web, SteamID owner, IEnumerable<string> types, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            List<CInventory> inventories = new List<CInventory>();
+            foreach (string type in types)
+            {
+                InventoryType parsedType = InventoryType.Parse(type);
+                if (parsedType != null)
+                {
+                    CInventory iInv = new CInventory(web, owner, parsedType, fType, iStart);
+                    iInv.FetchInventory();
+                    if (iInv.InventoryLoaded)
+                        inventories.Add(iInv);
+                }
+            }
+            return inventories;
+        }
+
+        public static void FetchInventoriesAsync(SteamWeb web, SteamID owner, IEnumerable<string> types, OnInventoryLoaded callback, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            foreach (string type in types)
+            {
+                InventoryType parsedType = InventoryType.Parse(type);
+                if (parsedType != null)
+                {
+                    CInventory iInv = new CInventory(web, owner, parsedType, fType, iStart);
+#pragma warning disable 4014
+                    iInv.FetchInventoryAsync(callback);
+#pragma warning restore 4014
+                }
+            }
+        }
+
+        public static IEnumerable<CInventory> FetchInventories(SteamWeb web, SteamID owner, IEnumerable<InventoryType> types, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            List<CInventory> inventories = new List<CInventory>();
+            foreach (InventoryType type in types)
+            {
+                CInventory iInv = new CInventory(web, owner, type, fType, iStart);
+                iInv.FetchInventory();
+                if (iInv.InventoryLoaded)
+                    inventories.Add(iInv);
+            }
+            return inventories;
+        }
+
+        public static void FetchInventoriesAsync(SteamWeb web, SteamID owner, IEnumerable<InventoryType> types, OnInventoryLoaded callback, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        {
+            foreach (InventoryType type in types)
+            {
+                CInventory iInv = new CInventory(web, owner, type, fType, iStart);
+#pragma warning disable 4014
+                iInv.FetchInventoryAsync(callback);
+#pragma warning restore 4014
+            }
+        }
+
+        public static void FetchInventories(IEnumerable<CInventory> inventories)
+        {
+            foreach (CInventory inv in inventories)
+                inv.FetchInventory();
+        }
+
+        public static void FetchInventoriesAsync(IEnumerable<CInventory> inventories, OnInventoryLoaded callback)
+        {
+            foreach (CInventory inv in inventories)
+#pragma warning disable 4014
+                inv.FetchInventoryAsync(callback);
+#pragma warning restore 4014
         }
     }
 }

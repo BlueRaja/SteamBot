@@ -63,15 +63,15 @@ namespace SteamTrade
 
         private readonly Dictionary<int, TradeUserAssets> myOfferedItemsLocalCopy;
         private readonly TradeSession session;
-        private readonly List<Inventory.Inventory> myInventory;
-        private readonly List<Inventory.Inventory> otherInventory;
+        private readonly List<CInventory> myInventory;
+        private readonly List<CInventory> otherInventory;
         private List<TradeUserAssets> myOfferedItems;
         private List<TradeUserAssets> otherOfferedItems;
         private bool otherUserTimingOut;
         private bool tradeCancelledByBot;
         private int numUnknownStatusUpdates;
 
-        internal Trade(SteamID me, SteamID other, SteamWeb steamWeb, List<Inventory.Inventory> myInventory, List<Inventory.Inventory> otherInventory)
+        internal Trade(SteamID me, SteamID other, SteamWeb steamWeb, List<CInventory> myInventory, List<CInventory> otherInventory)
         {
             TradeStarted = false;
             OtherIsReady = false;
@@ -107,11 +107,11 @@ namespace SteamTrade
         /// <summary> 
         /// Gets the inventory of the other user. 
         /// </summary>
-        public IEnumerable<Inventory.Inventory> OtherInventory
+        public IEnumerable<CInventory> OtherInventory
         {
             get
             {
-                if(otherInventory == null || OtherInventory.Count() <= 0)
+                if(!IsInventoriesLoaded(otherInventory))
                     return null;
                 return otherInventory;
             }
@@ -120,14 +120,25 @@ namespace SteamTrade
         /// <summary> 
         /// Gets the inventory of the bot. 
         /// </summary>
-        public IEnumerable<Inventory.Inventory> MyInventory
+        public IEnumerable<CInventory> MyInventory
         {
             get
             {
-                if (myInventory == null || myInventory.Count() <= 0)
+                if (!IsInventoriesLoaded(myInventory))
                     return null;
                 return myInventory;
             }
+        }
+
+        private bool IsInventoriesLoaded(IEnumerable<CInventory> inventories)
+        {
+            int count = 0;
+            foreach (CInventory inv in inventories)
+            {
+                if (inv.InventoryLoaded)
+                    ++count;
+            }
+            return count == inventories.Count();
         }
 
         /// <summary>
@@ -533,9 +544,10 @@ namespace SteamTrade
 
         public InventoryItem GetMyItem(ulong assetId)
         {
-            if (MyInventory == null)
+            var tMInv = MyInventory;
+            if (tMInv == null)
                 return null;
-            foreach (var inv in MyInventory)
+            foreach (var inv in tMInv)
             {
                 var temp = inv.GetItem(assetId);
                 if (temp != null)
@@ -546,9 +558,10 @@ namespace SteamTrade
 
         public InventoryItem GetOtherItem(ulong assetId)
         {
-            if (OtherInventory == null)
+            var tMInv = OtherInventory;
+            if (tMInv == null)
                 return null;
-            foreach (var inv in OtherInventory)
+            foreach (var inv in tMInv)
             {
                 var temp = inv.GetItem(assetId);
                 if (temp != null)

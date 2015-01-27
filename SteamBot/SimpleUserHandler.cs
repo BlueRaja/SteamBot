@@ -39,7 +39,7 @@ namespace SteamBot
             SendChatMessage(Bot.ChatResponse);
         }
 
-        private void OnInvCallback(Inventory inventory)
+        private void OnInvCallback(CInventory inventory)
         {
             if (inventory.Items == null)
             {

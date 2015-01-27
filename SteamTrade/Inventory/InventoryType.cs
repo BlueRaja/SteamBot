@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 namespace SteamTrade.Inventory
 {
     /// <summary>
@@ -58,14 +59,24 @@ namespace SteamTrade.Inventory
         /// </summary>
         public readonly Game Game;
 
-        public static InventoryType GetTypeFromString(string sType)
+        public static InventoryType Parse(string sType)
         {
             var type = typeof(InventoryType);
-            var invType = type.GetField(sType);
-            if (!invType.IsStatic)
-                throw new Exception("Inventory type is not static!");
+            FieldInfo invType = null;
+            try
+            {
+                invType = type.GetField(sType);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            if (invType == null)
+                return null;
+            else if (!invType.IsStatic)
+                return null;
             else if (invType.FieldType != type)
-                throw new Exception("Field is not of InventoryType");
+                return null;
             return invType.GetValue(null) as InventoryType;
         }
 

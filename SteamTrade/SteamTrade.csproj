@@ -62,7 +62,7 @@
     <Compile Include="Inventory\Game.cs" />
     <Compile Include="Inventory\InventoryItem.cs" />
     <Compile Include="Inventory\InventoryJsonDownloader.cs" />
-    <Compile Include="Inventory\Inventory.cs" />
+    <Compile Include="Inventory\CInventory.cs" />
     <Compile Include="Inventory\InventoryTag.cs" />
     <Compile Include="Inventory\InventoryType.cs" />
     <Compile Include="Trade.cs" />

@@ -50,7 +50,7 @@ namespace SteamBot
         // The log for the bot.  This logs with the bot's display name.
         public Log log;
         public string[] InventoriesToLoad { get; private set; }
-        public List<Inventory> MyLoadedInventories = new List<Inventory>();
+        public List<CInventory> MyLoadedInventories = new List<CInventory>();
         private string logFile;
 
         public delegate UserHandler UserHandlerCreator(Bot bot, SteamID id);
@@ -832,8 +832,8 @@ namespace SteamBot
         {
             List<InventoryType> types = new List<InventoryType>();
             foreach (string inv in InventoriesToLoad)
-                types.Add(InventoryType.GetTypeFromString(inv));
-            MyLoadedInventories = Inventory.FetchInventories(SteamWeb, SteamUser.SteamID, types) as List<Inventory>;
+                types.Add(InventoryType.Parse(inv));
+            MyLoadedInventories = CInventory.FetchInventories(SteamWeb, SteamUser.SteamID, types) as List<CInventory>;
         }
 
         /// <summary>
@@ -841,13 +841,10 @@ namespace SteamBot
         /// </summary>
         public void QuickLoadMyInventories()
         {
-            List<InventoryType> types = new List<InventoryType>();
-            foreach (string inv in InventoriesToLoad)
-                types.Add(InventoryType.GetTypeFromString(inv));
-            Inventory.QuickFetchInventories(SteamWeb, SteamUser.SteamID, OnInventoryLoaded, types);
+            CInventory.FetchInventoriesAsync(SteamWeb, SteamUser.SteamID, InventoriesToLoad, OnInventoryLoaded);
         }
 
-        private void OnInventoryLoaded(Inventory inventory)
+        private void OnInventoryLoaded(CInventory inventory)
         {
             if (inventory != null && inventory.Items != null)
                 MyLoadedInventories.Add(inventory);

@@ -23,7 +23,7 @@ namespace SteamBot
         public SteamID OtherSID { get; private set; }
 
         private bool _lastMessageWasFromTrade;
-        protected List<Inventory> OtherLoadedInventories = new List<Inventory>();
+        protected List<CInventory> OtherLoadedInventories = new List<CInventory>();
 
         protected SteamWeb SteamWeb
         {
@@ -51,8 +51,8 @@ namespace SteamBot
         {
             List<InventoryType> types = new List<InventoryType>();
             foreach (string inv in Bot.InventoriesToLoad)
-                types.Add(InventoryType.GetTypeFromString(inv));
-            OtherLoadedInventories = Inventory.FetchInventories(SteamWeb, OtherSID, types) as List<Inventory>;
+                types.Add(InventoryType.Parse(inv));
+            OtherLoadedInventories = CInventory.FetchInventories(SteamWeb, OtherSID, types) as List<CInventory>;
         }
 
         /// <summary>
@@ -60,13 +60,10 @@ namespace SteamBot
         /// </summary>
         public void QuickLoadOtherInventories()
         {
-            List<InventoryType> types = new List<InventoryType>();
-            foreach (string inv in Bot.InventoriesToLoad)
-                types.Add(InventoryType.GetTypeFromString(inv));
-            Inventory.QuickFetchInventories(SteamWeb, OtherSID, OnInventoryLoaded, types);
+            CInventory.FetchInventoriesAsync(SteamWeb, OtherSID, Bot.InventoriesToLoad, OnInventoryLoaded);
         }
 
-        private void OnInventoryLoaded(Inventory inventory)
+        private void OnInventoryLoaded(CInventory inventory)
         {
             if (inventory != null && inventory.Items != null)
                 OtherLoadedInventories.Add(inventory);

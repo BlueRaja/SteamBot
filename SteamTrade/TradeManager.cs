@@ -20,8 +20,8 @@ namespace SteamTrade
         private DateTime tradeStartTime;
         private DateTime lastOtherActionTime;
         private DateTime lastTimeoutMessage;
-        private List<Inventory.Inventory> myInventory;
-        private List<Inventory.Inventory> otherInventory;
+        private List<CInventory> myInventory;
+        private List<CInventory> otherInventory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SteamTrade.TradeManager"/> class.
@@ -88,7 +88,7 @@ namespace SteamTrade
         /// <summary>
         /// Gets the loaded inventories of the bot.
         /// </summary>
-        public IEnumerable<Inventory.Inventory> MyInventory
+        public IEnumerable<CInventory> MyInventory
         {
             get
             {
@@ -99,7 +99,7 @@ namespace SteamTrade
         /// <summary>
         /// Gets the loaded inventories of the bot.
         /// </summary>
-        public IEnumerable<Inventory.Inventory> OtherInventory
+        public IEnumerable<CInventory> OtherInventory
         {
             get
             {
@@ -212,24 +212,21 @@ namespace SteamTrade
         /// </remarks>
         public void InitializeTrade (SteamID me, SteamID other)
         {
-            myInventory = new List<Inventory.Inventory>();
-            otherInventory = new List<Inventory.Inventory>();
-            List<InventoryType> types = new List<InventoryType>();
-            foreach (string inv in InventoriesToLoad)
-                types.Add(InventoryType.GetTypeFromString(inv));
-            Inventory.Inventory.QuickFetchInventories(SteamWeb, other, OnOtherInventoryLoaded, types, FetchType.TradeInventory);
-            Inventory.Inventory.QuickFetchInventories(SteamWeb, me, OnMyInventoryLoaded, types, FetchType.TradeInventory);
+            myInventory = new List<CInventory>();
+            otherInventory = new List<CInventory>();
+            CInventory.FetchInventoriesAsync(SteamWeb, me, InventoriesToLoad, OnMyInventoryLoaded, FetchType.TradeInventory);
+            CInventory.FetchInventoriesAsync(SteamWeb, other, InventoriesToLoad, OnOtherInventoryLoaded, FetchType.TradeInventory);
         }
 
-        private void OnMyInventoryLoaded(Inventory.Inventory inventory)
+        private void OnMyInventoryLoaded(CInventory inventory)
         {
-            if (inventory != null && inventory.Items != null)
+            if (inventory != null && inventory.InventoryLoaded)
                 myInventory.Add(inventory);
         }
 
-        private void OnOtherInventoryLoaded(Inventory.Inventory inventory)
+        private void OnOtherInventoryLoaded(CInventory inventory)
         {
-            if (inventory != null && inventory.Items != null)
+            if (inventory != null && inventory.InventoryLoaded)
                 otherInventory.Add(inventory);
         }
 
