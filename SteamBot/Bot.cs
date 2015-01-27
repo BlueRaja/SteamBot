@@ -454,7 +454,7 @@ namespace SteamBot
                 MyUniqueId = callback.UniqueID.ToString();
 
                 UserWebLogOn();
-                QuickLoadMyInventories();
+                LoadMyInventoriesAsync();
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
                 SteamFriends.SetPersonaState(EPersonaState.Online);
 
@@ -830,24 +830,19 @@ namespace SteamBot
         /// </summary>
         public void LoadMyInventories()
         {
-            List<InventoryType> types = new List<InventoryType>();
-            foreach (string inv in InventoriesToLoad)
-                types.Add(InventoryType.Parse(inv));
-            MyLoadedInventories = CInventory.FetchInventories(SteamWeb, SteamUser.SteamID, types) as List<CInventory>;
+            MyLoadedInventories = CInventory.FetchInventories(SteamWeb, SteamUser.SteamID, InventoriesToLoad) as List<CInventory>;
         }
 
         /// <summary>
         /// This loads the other user's inventories from the bot's config.
         /// </summary>
-        public void QuickLoadMyInventories()
+        public void LoadMyInventoriesAsync()
         {
-            CInventory.FetchInventoriesAsync(SteamWeb, SteamUser.SteamID, InventoriesToLoad, OnInventoryLoaded);
-        }
-
-        private void OnInventoryLoaded(CInventory inventory)
-        {
-            if (inventory != null && inventory.Items != null)
-                MyLoadedInventories.Add(inventory);
+            CInventory.FetchInventoriesAsync(SteamWeb, SteamUser.SteamID, InventoriesToLoad, delegate(CInventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    MyLoadedInventories.Add(inventory);
+            });
         }
 
         //todo: should unsubscribe eventually...

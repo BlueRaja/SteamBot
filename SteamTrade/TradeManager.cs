@@ -214,20 +214,16 @@ namespace SteamTrade
         {
             myInventory = new List<CInventory>();
             otherInventory = new List<CInventory>();
-            CInventory.FetchInventoriesAsync(SteamWeb, me, InventoriesToLoad, OnMyInventoryLoaded, FetchType.TradeInventory);
-            CInventory.FetchInventoriesAsync(SteamWeb, other, InventoriesToLoad, OnOtherInventoryLoaded, FetchType.TradeInventory);
-        }
-
-        private void OnMyInventoryLoaded(CInventory inventory)
-        {
-            if (inventory != null && inventory.InventoryLoaded)
-                myInventory.Add(inventory);
-        }
-
-        private void OnOtherInventoryLoaded(CInventory inventory)
-        {
-            if (inventory != null && inventory.InventoryLoaded)
-                otherInventory.Add(inventory);
+            CInventory.FetchInventoriesAsync(SteamWeb, me, InventoriesToLoad, delegate(CInventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    myInventory.Add(inventory);
+            }, FetchType.TradeInventory);
+            CInventory.FetchInventoriesAsync(SteamWeb, other, InventoriesToLoad, delegate(CInventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    otherInventory.Add(inventory);
+            }, FetchType.TradeInventory);
         }
 
         #endregion Public Methods

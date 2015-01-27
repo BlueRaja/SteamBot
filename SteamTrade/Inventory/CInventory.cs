@@ -22,7 +22,6 @@ namespace SteamTrade.Inventory
         private SteamWeb web;
         private FetchType fType;
         private ulong start;
-        private bool callbackFired;
 
         public bool InventoryLoaded
         {
@@ -73,24 +72,24 @@ namespace SteamTrade.Inventory
             }
             if ((bool)inventoryJO["more"])
             {
-                CInventory moreInv = new CInventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]);
+                bool callFire = false;
 #pragma warning disable 4014
-                moreInv.FetchInventoryAsync(this.MoreInvLoaded);
+                new CInventory(web, InventoryOwner, InventoryType, fType, (ulong)inventoryJO["more_start"]).FetchInventoryAsync(delegate(CInventory inventory)
+                {
+                    if (inventory.InventoryLoaded)
+                    {
+                        items.AddRange(inventory.Items);
+                        callFire = true;
+                    }
+                });
 #pragma warning restore
-                while (!callbackFired)
+                while (!callFire)
                     Thread.Yield();
-                if (moreInv.InventoryLoaded)
-                    items.AddRange(moreInv.Items);
             }
             invLoaded = true;
             this.Items = items;
             Callback:
             callback(this);
-        }
-
-        private void MoreInvLoaded(CInventory inventory)
-        {
-            this.callbackFired = true;
         }
 
         private InventoryItem GenerateItemFromJson(JObject itemJo, JObject descriptionJo)
@@ -110,7 +109,7 @@ namespace SteamTrade.Inventory
             item.IsTradable = (bool) descriptionJo["tradable"];
             item.Type = (string) descriptionJo["type"];
             item.Amount = itemJo["amount"] != null ? (ulong)itemJo["amount"] : 1;
-            string desc = "";
+            string desc = null;
             if (descriptionJo["descriptions"].Type == JTokenType.Array)
             {
                 foreach (JObject descJO in descriptionJo["descriptions"])
@@ -121,19 +120,24 @@ namespace SteamTrade.Inventory
                         desc += "\n" + (string)descJO["value"];
                 }
             }
-            item.Description = desc;
-            List<InventoryTag> tags = new List<InventoryTag>();
-            foreach (JObject jTag in descriptionJo["tags"])
+            item.Description = desc == null ? "" : desc;
+            IEnumerable<InventoryTag> tags = null;
+            if (descriptionJo["tags"] != null)
             {
-                InventoryTag nTag = new InventoryTag();
-                nTag.InternalName = (string)jTag["internal_name"];
-                nTag.Name = (string)jTag["name"];
-                nTag.Category = (string)jTag["category"];
-                nTag.CategoryName = (string)jTag["category_name"];
-                nTag.Color = (string)jTag["color"];
-                tags.Add(nTag);
+                List<InventoryTag> pTags = new List<InventoryTag>();
+                foreach (JObject jTag in descriptionJo["tags"])
+                {
+                    InventoryTag nTag = new InventoryTag();
+                    nTag.InternalName = (string)jTag["internal_name"];
+                    nTag.Name = (string)jTag["name"];
+                    nTag.Category = (string)jTag["category"];
+                    nTag.CategoryName = (string)jTag["category_name"];
+                    nTag.Color = (string)jTag["color"];
+                    pTags.Add(nTag);
+                }
+                tags = pTags;
             }
-            item.Tags = tags.ToArray();
+            item.Tags = tags;
             return item;
         }
 

@@ -41,7 +41,7 @@ namespace SteamBot
         {
             Bot = bot;
             OtherSID = sid;
-            QuickLoadOtherInventories();
+            LoadOtherInventoriesAsync();
         }
 
         /// <summary>
@@ -49,24 +49,19 @@ namespace SteamBot
         /// </summary>
         public void LoadOtherInventories()
         {
-            List<InventoryType> types = new List<InventoryType>();
-            foreach (string inv in Bot.InventoriesToLoad)
-                types.Add(InventoryType.Parse(inv));
-            OtherLoadedInventories = CInventory.FetchInventories(SteamWeb, OtherSID, types) as List<CInventory>;
+            OtherLoadedInventories = CInventory.FetchInventories(SteamWeb, OtherSID, Bot.InventoriesToLoad).ToList();
         }
 
         /// <summary>
         /// This loads the other user's inventories from the bot's config.
         /// </summary>
-        public void QuickLoadOtherInventories()
+        public void LoadOtherInventoriesAsync()
         {
-            CInventory.FetchInventoriesAsync(SteamWeb, OtherSID, Bot.InventoriesToLoad, OnInventoryLoaded);
-        }
-
-        private void OnInventoryLoaded(CInventory inventory)
-        {
-            if (inventory != null && inventory.Items != null)
-                OtherLoadedInventories.Add(inventory);
+            CInventory.FetchInventoriesAsync(SteamWeb, OtherSID, Bot.InventoriesToLoad, delegate(CInventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    OtherLoadedInventories.Add(inventory);
+            });
         }
 
         /// <summary>
