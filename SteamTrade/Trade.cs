@@ -111,7 +111,7 @@ namespace SteamTrade
         {
             get
             {
-                if(otherInventory == null || ((List<Inventory.Inventory>)otherInventory).Count <= 0)
+                if(otherInventory == null || OtherInventory.Count() <= 0)
                     return null;
                 return otherInventory;
             }
@@ -124,7 +124,7 @@ namespace SteamTrade
         {
             get
             {
-                if (myInventory == null || ((List<Inventory.Inventory>)myInventory).Count <= 0)
+                if (myInventory == null || myInventory.Count() <= 0)
                     return null;
                 return myInventory;
             }
