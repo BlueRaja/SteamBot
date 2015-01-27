@@ -41,7 +41,7 @@ namespace SteamBot
         {
             Bot = bot;
             OtherSID = sid;
-            LoadOtherInventories();
+            QuickLoadOtherInventories();
         }
 
         /// <summary>

@@ -88,9 +88,9 @@ namespace SteamTrade.Inventory
             await ParseAsync(callback);
         }
 
+#warning "This non-async method needs debugging as something is horrible with it."
         private void Parse()
         {
-            Console.WriteLine(fType);
             InventoryJsonDownloader downloader = new InventoryJsonDownloader(web);
             string json = null;
             switch (fType)
@@ -106,15 +106,7 @@ namespace SteamTrade.Inventory
                     break;
             }
             List<InventoryItem> items = new List<InventoryItem>();
-            JObject inventoryJO = null;
-            try
-            {
-                inventoryJO = JObject.Parse(json);
-            }
-            catch (Exception)
-            {
-                return;
-            }
+            JObject inventoryJO = JObject.Parse(json);
             if (!(bool)inventoryJO["success"])
                 throw new InventoryFetchException(this.InventoryOwner);
             foreach (JProperty itemProperty in inventoryJO["rgInventory"])
