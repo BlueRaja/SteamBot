@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using SteamKit2;
+using System.Threading.Tasks;
 
 namespace SteamTrade
 {
@@ -30,6 +31,20 @@ namespace SteamTrade
                     using (StreamReader reader = new StreamReader(responseStream))
                     {
                         return reader.ReadToEnd();
+                    }
+                }
+            }
+        }
+
+        public async Task<string> FetchAsync(string url, string method, NameValueCollection data = null, bool ajax = true, string referer = "")
+        {
+            using (HttpWebResponse response = await RequestAsync(url, method, data, ajax, referer))
+            {
+                using (Stream responseStream = response.GetResponseStream())
+                {
+                    using (StreamReader reader = new StreamReader(responseStream))
+                    {
+                        return await reader.ReadToEndAsync();
                     }
                 }
             }
@@ -83,6 +98,56 @@ namespace SteamTrade
 
             // Get the response
             return request.GetResponse() as HttpWebResponse;
+        }
+
+        public async Task<HttpWebResponse> RequestAsync(string url, string method, NameValueCollection data = null, bool ajax = true, string referer = "")
+        {
+            //Append the data to the URL for GET-requests
+            bool isGetMethod = (method.ToLower() == "get");
+            string dataString = (data == null ? null : String.Join("&", Array.ConvertAll(data.AllKeys, key =>
+                String.Format("{0}={1}", HttpUtility.UrlEncode(key), HttpUtility.UrlEncode(data[key]))
+            )));
+
+            if (isGetMethod && !String.IsNullOrEmpty(dataString))
+            {
+                url += (url.Contains("?") ? "&" : "?") + dataString;
+            }
+
+            //Setup the request
+            HttpWebRequest request = WebRequest.CreateHttp(url);
+            request.Method = method;
+            request.Accept = "application/json, text/javascript;q=0.9, */*;q=0.5";
+            request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            //request.Host is set automatically
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36";
+            request.Referer = string.IsNullOrEmpty(referer) ? "http://steamcommunity.com/trade/1" : referer;
+            request.Timeout = 50000; //Timeout after 50 seconds
+            request.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.Revalidate);
+            request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+
+            if (ajax)
+            {
+                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+                request.Headers.Add("X-Prototype-Version", "1.7");
+            }
+
+            // Cookies
+            request.CookieContainer = _cookies;
+
+            // Write the data to the body for POST and other methods
+            if (!isGetMethod && !String.IsNullOrEmpty(dataString))
+            {
+                byte[] dataBytes = Encoding.UTF8.GetBytes(dataString);
+                request.ContentLength = dataBytes.Length;
+
+                using (Stream requestStream = await request.GetRequestStreamAsync())
+                {
+                    await requestStream.WriteAsync(dataBytes, 0, dataBytes.Length);
+                }
+            }
+
+            // Get the response
+            return await request.GetResponseAsync() as HttpWebResponse;
         }
 
         /// <summary>

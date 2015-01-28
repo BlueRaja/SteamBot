@@ -14,6 +14,7 @@ using SteamTrade;
 using SteamKit2.Internal;
 using SteamTrade.TradeOffer;
 using SteamBot.Logging;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -48,6 +49,8 @@ namespace SteamBot
 
         // The log for the bot.  This logs with the bot's display name.
         public Log log;
+        public string[] InventoriesToLoad { get; private set; }
+        public List<CInventory> MyLoadedInventories = new List<CInventory>();
         private string logFile;
 
         public delegate UserHandler UserHandlerCreator(Bot bot, SteamID id);
@@ -103,16 +106,6 @@ namespace SteamBot
 
         TradeManager tradeManager;
         private TradeOfferManager tradeOfferManager;
-        private Task<Inventory_OLD> myInventoryTask;
-
-        public Inventory_OLD MyInventory
-        {
-            get
-            {
-                myInventoryTask.Wait();
-                return myInventoryTask.Result;
-            }
-        }
 
         private BackgroundWorker backgroundWorker;
 
@@ -130,6 +123,7 @@ namespace SteamBot
             DisplayNamePrefix = config.DisplayNamePrefix;
             TradePollingInterval = config.TradePollingInterval <= 100 ? 800 : config.TradePollingInterval;
             Admins = config.Admins;
+            InventoriesToLoad = config.Inventories;
             this.ApiKey = !String.IsNullOrEmpty(config.ApiKey) ? config.ApiKey : apiKey;
             this.isprocess = process;
 
@@ -352,7 +346,7 @@ namespace SteamBot
 
             try
             {
-                tradeManager.InitializeTrade(SteamUser.SteamID, other);
+                tradeManager.InitializeTrade(SteamUser.SteamID, other, BotControlClass);
                 CurrentTrade = tradeManager.CreateTrade(SteamUser.SteamID, other);
                 CurrentTrade.OnClose += CloseTrade;
                 SubscribeTrade(CurrentTrade, GetUserHandler(other));
@@ -401,7 +395,7 @@ namespace SteamBot
             CurrentGame = id;
         }
 
-        void HandleSteamMessage(CallbackMsg msg)
+        void HandleSteamMessage(ICallbackMsg msg)
         {
             log.Debug(msg.ToString());
 
@@ -458,16 +452,8 @@ namespace SteamBot
             msg.Handle<SteamUser.LoginKeyCallback>(callback =>
             {
                 MyUniqueId = callback.UniqueID.ToString();
-
                 UserWebLogOn();
-
-                if (Trade.CurrentSchema == null)
-                {
-                    log.Info("Downloading Schema...");
-                    Trade.CurrentSchema = Schema.FetchSchema (ApiKey);
-                    log.Success("Schema Downloaded!");
-                }
-
+                LoadMyInventoriesAsync();
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
                 SteamFriends.SetPersonaState(EPersonaState.Online);
 
@@ -476,29 +462,24 @@ namespace SteamBot
                 GetUserHandler(SteamClient.SteamID).OnLoginCompleted();
             });
 
-            msg.Handle<SteamClient.JobCallback<SteamUser.WebAPIUserNonceCallback>>(jobCallback =>
+            msg.Handle<SteamUser.WebAPIUserNonceCallback>(webCallback =>
             {
                 log.Debug("Received new WebAPIUserNonce.");
 
-                if (jobCallback.Callback.Result == EResult.OK)
+                if (webCallback.Result == EResult.OK)
                 {
-                    MyUserNonce = jobCallback.Callback.Nonce;
-
+                    MyUserNonce = webCallback.Nonce;
                     UserWebLogOn();
                 }
                 else
                 {
-                    log.Error("WebAPIUserNonce Error: " + jobCallback.Callback.Result);
+                    log.Error("WebAPIUserNonce Error: " + webCallback.Result);
                 }
             });
 
-            // handle a special JobCallback differently than the others
-            if (msg.IsType<SteamClient.JobCallback<SteamUser.UpdateMachineAuthCallback>>())
-            {
-                msg.Handle<SteamClient.JobCallback<SteamUser.UpdateMachineAuthCallback>>(
-                    jobCallback => OnUpdateMachineAuthCallback(jobCallback.Callback, jobCallback.JobID)
-                );
-            }
+            msg.Handle<SteamUser.UpdateMachineAuthCallback>(
+                authCallback => OnUpdateMachineAuthCallback(authCallback)
+            );
             #endregion
 
             #region Friends
@@ -598,7 +579,7 @@ namespace SteamBot
 
                 try
                 {
-                    tradeManager.InitializeTrade(SteamUser.SteamID, callback.OtherClient);
+                    tradeManager.InitializeTrade(SteamUser.SteamID, callback.OtherClient, BotControlClass);
                 }
                 catch (WebException we)
                 {
@@ -731,7 +712,7 @@ namespace SteamBot
 
                     log.Success("User Authenticated!");
 
-                    tradeManager = new TradeManager(ApiKey, SteamWeb);
+                    tradeManager = new TradeManager(ApiKey, SteamWeb, InventoriesToLoad);
                     tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
                     tradeManager.OnTimeout += OnTradeTimeout;
 
@@ -803,7 +784,7 @@ namespace SteamBot
             return output;
         }
 
-        void OnUpdateMachineAuthCallback(SteamUser.UpdateMachineAuthCallback machineAuth, JobID jobId)
+        void OnUpdateMachineAuthCallback(SteamUser.UpdateMachineAuthCallback machineAuth)
         {
             byte[] hash = SHAHash(machineAuth.Data);
 
@@ -824,32 +805,11 @@ namespace SteamBot
 
                 LastError = 0, // result from win32 GetLastError
                 Result = EResult.OK, // if everything went okay, otherwise ~who knows~
-
-                JobID = jobId, // so we respond to the correct server job
+                JobID = machineAuth.JobID, // so we respond to the correct server job
             };
 
             // send off our response
             SteamUser.SendMachineAuthResponse(authResponse);
-        }
-
-        /// <summary>
-        /// Gets the bot's inventory and stores it in MyInventory.
-        /// </summary>
-        /// <example> This sample shows how to find items in the bot's inventory from a user handler.
-        /// <code>
-        /// Bot.GetInventory(); // Get the inventory first
-        /// foreach (var item in Bot.MyInventory.Items)
-        /// {
-        ///     if (item.Defindex == 5021)
-        ///     {
-        ///         // Bot has a key in its inventory
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
-        public void GetInventory()
-        {
-            myInventoryTask = Task.Factory.StartNew(() => Inventory_OLD.FetchInventory(SteamUser.SteamID, ApiKey, SteamWeb));
         }
 
         public void TradeOfferRouter(TradeOffer offer)
@@ -862,6 +822,26 @@ namespace SteamBot
         public void SubscribeTradeOffer(TradeOfferManager tradeOfferManager)
         {
             tradeOfferManager.OnNewTradeOffer += TradeOfferRouter;
+        }
+
+        /// <summary>
+        /// This loads the other user's inventories from the bot's config.
+        /// </summary>
+        public void LoadMyInventories()
+        {
+            MyLoadedInventories = CInventory.FetchInventories(SteamWeb, SteamUser.SteamID, InventoriesToLoad, userHandler:BotControlClass) as List<CInventory>;
+        }
+
+        /// <summary>
+        /// This loads the other user's inventories from the bot's config.
+        /// </summary>
+        public void LoadMyInventoriesAsync()
+        {
+            CInventory.FetchInventoriesAsync(SteamWeb, SteamUser.SteamID, InventoriesToLoad, delegate(CInventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    MyLoadedInventories.Add(inventory);
+            }, userHandler:BotControlClass);
         }
 
         //todo: should unsubscribe eventually...
@@ -931,7 +911,7 @@ namespace SteamBot
 
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            CallbackMsg msg;
+            ICallbackMsg msg;
 
             while (!backgroundWorker.CancellationPending)
             {

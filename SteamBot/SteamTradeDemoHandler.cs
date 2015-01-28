@@ -1,6 +1,7 @@
 using SteamKit2;
 using System.Collections.Generic;
 using SteamTrade;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -92,36 +93,14 @@ namespace SteamBot
             // -----------------------------------------------------------------------------------
         }
         
-        public override void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) {
+        public override void OnTradeAddItem (InventoryItem inventoryItem) {
             // USELESS DEBUG MESSAGES -------------------------------------------------------------------------------
-            SendTradeMessage("Object AppID: {0}", inventoryItem.AppId);
-            SendTradeMessage("Object ContextId: {0}", inventoryItem.ContextId);
-
-            switch (inventoryItem.AppId)
-            {
-                case 440:
-                    SendTradeMessage("TF2 Item Added.");
-                    SendTradeMessage("Name: {0}", schemaItem.Name);
-                    SendTradeMessage("Quality: {0}", inventoryItem.Quality);
-                    SendTradeMessage("Level: {0}", inventoryItem.Level);
-                    SendTradeMessage("Craftable: {0}", (inventoryItem.IsNotCraftable ? "No" : "Yes"));
-                    break;
-
-                case 753:
-                    GenericInventory.ItemDescription tmpDescription = OtherSteamInventory.getDescription(inventoryItem.Id);
-                    SendTradeMessage("Steam Inventory Item Added.");
-                    SendTradeMessage("Type: {0}", tmpDescription.type);
-                    SendTradeMessage("Marketable: {0}", (tmpDescription.marketable ? "Yes" : "No"));
-                    break;
-
-                default:
-                    SendTradeMessage("Unknown item");
-                    break;
-            }
+            SendTradeMessage("Object AppID: {0}", inventoryItem.InventoryType.Game);
+            SendTradeMessage("Object ContextId: {0}", inventoryItem.InventoryType.ContextId);
             // ------------------------------------------------------------------------------------------------------
         }
         
-        public override void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) {}
+        public override void OnTradeRemoveItem (InventoryItem inventoryItem) {}
         
         public override void OnTradeMessage (string message) {
             switch (message.ToLower())
