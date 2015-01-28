@@ -59,18 +59,14 @@ namespace SteamTrade.Inventory
         /// </summary>
         public readonly Game Game;
 
-        public static InventoryType Parse(string sType)
+        public static InventoryType Parse(string sType, string userhandler = null)
         {
-            var type = typeof(InventoryType);
+            Type type = typeof(InventoryType);
+            Type userType = userhandler != null ? Type.GetType(userhandler) : null;
             FieldInfo invType = null;
-            try
-            {
-                invType = type.GetField(sType);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            invType = type.GetField(sType);
+            if (invType == null && userType != null)
+                invType = userType.GetField(sType);
             if (invType == null)
                 return null;
             else if (!invType.IsStatic)

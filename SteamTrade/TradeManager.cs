@@ -210,7 +210,7 @@ namespace SteamTrade
         /// This should be done anytime a new user is traded with or the inventories are out of date. It should
         /// be done sometime before calling <see cref="CreateTrade"/>.
         /// </remarks>
-        public void InitializeTrade (SteamID me, SteamID other)
+        public void InitializeTrade (SteamID me, SteamID other, string userHandler = null)
         {
             myInventory = new List<CInventory>();
             otherInventory = new List<CInventory>();
@@ -218,12 +218,12 @@ namespace SteamTrade
             {
                 if (inventory.InventoryLoaded)
                     myInventory.Add(inventory);
-            }, FetchType.TradeInventory);
+            }, FetchType.TradeInventory, userHandler:userHandler);
             CInventory.FetchInventoriesAsync(SteamWeb, other, InventoriesToLoad, delegate(CInventory inventory)
             {
                 if (inventory.InventoryLoaded)
                     otherInventory.Add(inventory);
-            }, FetchType.TradeInventory);
+            }, FetchType.TradeInventory, userHandler:userHandler);
         }
 
         #endregion Public Methods

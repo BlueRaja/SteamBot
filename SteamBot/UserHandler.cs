@@ -49,7 +49,7 @@ namespace SteamBot
         /// </summary>
         public void LoadOtherInventories()
         {
-            OtherLoadedInventories = CInventory.FetchInventories(SteamWeb, OtherSID, Bot.InventoriesToLoad).ToList();
+            OtherLoadedInventories = CInventory.FetchInventories(SteamWeb, OtherSID, Bot.InventoriesToLoad, userHandler:Bot.BotControlClass).ToList();
         }
 
         /// <summary>

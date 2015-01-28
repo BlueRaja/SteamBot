@@ -31,7 +31,16 @@
                 //"Steam_Coupons",
                 //"Steam_Community",
                 //"Steam_ItemRewards",
-                "TeamFortress2",
+                //"SuperMondayNightCombat_Products",
+                //"SuperMondayNightCombat_Uniforms",
+                //"SuperMondayNightCombat_Endorsements",
+                //"SuperMondayNightCombat_Pros",
+                //"SuperMondayNightCombat_Weapons",
+                //"SuperMondayNightCombat_Taunts",
+                //"SuperMondayNightCombat_Misc",
+                //"SuperMondayNightCombat_Flair",
+                //"SuperMondayNightCombat_TreasureBalls",
+                "TeamFortress2"
                 //"Warframe"
             ]
         }

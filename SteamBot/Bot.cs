@@ -346,7 +346,7 @@ namespace SteamBot
 
             try
             {
-                tradeManager.InitializeTrade(SteamUser.SteamID, other);
+                tradeManager.InitializeTrade(SteamUser.SteamID, other, BotControlClass);
                 CurrentTrade = tradeManager.CreateTrade(SteamUser.SteamID, other);
                 CurrentTrade.OnClose += CloseTrade;
                 SubscribeTrade(CurrentTrade, GetUserHandler(other));
@@ -452,7 +452,6 @@ namespace SteamBot
             msg.Handle<SteamUser.LoginKeyCallback>(callback =>
             {
                 MyUniqueId = callback.UniqueID.ToString();
-
                 UserWebLogOn();
                 LoadMyInventoriesAsync();
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
@@ -580,7 +579,7 @@ namespace SteamBot
 
                 try
                 {
-                    tradeManager.InitializeTrade(SteamUser.SteamID, callback.OtherClient);
+                    tradeManager.InitializeTrade(SteamUser.SteamID, callback.OtherClient, BotControlClass);
                 }
                 catch (WebException we)
                 {
@@ -830,7 +829,7 @@ namespace SteamBot
         /// </summary>
         public void LoadMyInventories()
         {
-            MyLoadedInventories = CInventory.FetchInventories(SteamWeb, SteamUser.SteamID, InventoriesToLoad) as List<CInventory>;
+            MyLoadedInventories = CInventory.FetchInventories(SteamWeb, SteamUser.SteamID, InventoriesToLoad, userHandler:BotControlClass) as List<CInventory>;
         }
 
         /// <summary>
@@ -842,7 +841,7 @@ namespace SteamBot
             {
                 if (inventory.InventoryLoaded)
                     MyLoadedInventories.Add(inventory);
-            });
+            }, userHandler:BotControlClass);
         }
 
         //todo: should unsubscribe eventually...

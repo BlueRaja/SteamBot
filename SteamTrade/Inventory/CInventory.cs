@@ -163,12 +163,12 @@ namespace SteamTrade.Inventory
             await new CInventory(web, owner, type, fType, iStart).FetchInventoryAsync(callback);
         }
 
-        public static IEnumerable<CInventory> FetchInventories(SteamWeb web, SteamID owner, IEnumerable<string> types, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        public static IEnumerable<CInventory> FetchInventories(SteamWeb web, SteamID owner, IEnumerable<string> types, FetchType fType = FetchType.Inventory, ulong iStart = 0, string userHandler = null)
         {
             List<CInventory> inventories = new List<CInventory>();
             foreach (string type in types)
             {
-                InventoryType parsedType = InventoryType.Parse(type);
+                InventoryType parsedType = InventoryType.Parse(type, userHandler);
                 if (parsedType != null)
                 {
                     CInventory iInv = new CInventory(web, owner, parsedType, fType, iStart);
@@ -180,11 +180,11 @@ namespace SteamTrade.Inventory
             return inventories;
         }
 
-        public static void FetchInventoriesAsync(SteamWeb web, SteamID owner, IEnumerable<string> types, OnInventoryLoaded callback, FetchType fType = FetchType.Inventory, ulong iStart = 0)
+        public static void FetchInventoriesAsync(SteamWeb web, SteamID owner, IEnumerable<string> types, OnInventoryLoaded callback, FetchType fType = FetchType.Inventory, ulong iStart = 0, string userHandler = null)
         {
             foreach (string type in types)
             {
-                InventoryType parsedType = InventoryType.Parse(type);
+                InventoryType parsedType = InventoryType.Parse(type, userHandler);
                 if (parsedType != null)
                 {
                     CInventory iInv = new CInventory(web, owner, parsedType, fType, iStart);
