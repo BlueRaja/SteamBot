@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using SteamKit2;
+using System.Threading.Tasks;
 
 namespace SteamTrade
 {
@@ -23,19 +24,35 @@ namespace SteamTrade
 
         public string Fetch(string url, string method, NameValueCollection data = null, bool ajax = true, string referer = "")
         {
-            using (HttpWebResponse response = Request(url, method, data, ajax, referer))
+            var fTask = FetchAsync(url, method, data, ajax, referer);
+            if (fTask.Wait(-1))
+                return fTask.Result;
+            else
+                return null;
+        }
+
+        public async Task<string> FetchAsync(string url, string method, NameValueCollection data = null, bool ajax = true, string referer = "")
+        {
+            using (HttpWebResponse response = await RequestAsync(url, method, data, ajax, referer))
             {
-                using (Stream responseStream = response.GetResponseStream())
+                using (Stream responseStrem = response.GetResponseStream())
                 {
-                    using (StreamReader reader = new StreamReader(responseStream))
-                    {
-                        return reader.ReadToEnd();
-                    }
+                    using (StreamReader reader = new StreamReader(responseStrem))
+                        return await reader.ReadToEndAsync();
                 }
             }
         }
 
         public HttpWebResponse Request(string url, string method, NameValueCollection data = null, bool ajax = true, string referer = "")
+        {
+            var rTask = RequestAsync(url, method, data, ajax, referer);
+            if (rTask.Wait(-1))
+                return rTask.Result;
+            else
+                return null;
+        }
+
+        public async Task<HttpWebResponse> RequestAsync(string url, string method, NameValueCollection data = null, bool ajax = true, string referer = "")
         {
             //Append the data to the URL for GET-requests
             bool isGetMethod = (method.ToLower() == "get");
@@ -49,7 +66,7 @@ namespace SteamTrade
             }
 
             //Setup the request
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            HttpWebRequest request = WebRequest.CreateHttp(url);
             request.Method = method;
             request.Accept = "application/json, text/javascript;q=0.9, */*;q=0.5";
             request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
@@ -77,12 +94,12 @@ namespace SteamTrade
 
                 using (Stream requestStream = request.GetRequestStream())
                 {
-                    requestStream.Write(dataBytes, 0, dataBytes.Length);
+                    await requestStream.WriteAsync(dataBytes, 0, dataBytes.Length);
                 }
             }
 
             // Get the response
-            return request.GetResponse() as HttpWebResponse;
+            return await request.GetResponseAsync() as HttpWebResponse;
         }
 
         /// <summary>

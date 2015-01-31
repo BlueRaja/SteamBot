@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 // Change them to the values specific to your project.
 
 [assembly: AssemblyTitle("SteamTrade")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("This handles trading with steam.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SteamTrade")]
