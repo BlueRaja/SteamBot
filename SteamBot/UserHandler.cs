@@ -8,6 +8,8 @@ using SteamKit2;
 using SteamTrade;
 using SteamBot.Logging;
 using SteamTrade.TradeOffer;
+using System.Collections.Generic;
+using SteamTrade.Inventory;
 
 namespace SteamBot
 {
@@ -21,7 +23,7 @@ namespace SteamBot
         public SteamID OtherSID { get; private set; }
 
         private bool _lastMessageWasFromTrade;
-        private Task<Inventory_OLD> otherInventoryTask;
+        protected List<CInventory> OtherLoadedInventories = new List<CInventory>();
 
         protected SteamWeb SteamWeb
         {
@@ -39,36 +41,27 @@ namespace SteamBot
         {
             Bot = bot;
             OtherSID = sid;
-            GetOtherInventory();
+            LoadOtherInventoriesAsync();
         }
 
         /// <summary>
-        /// Gets the other's inventory and stores it in OtherInventory.
+        /// This loads the other user's inventories from the bot's config.
         /// </summary>
-        /// <example> This sample shows how to find items in the other's inventory from a user handler.
-        /// <code>
-        /// GetInventory(); // Not necessary unless you know the user's inventory has changed
-        /// foreach (var item in OtherInventory)
-        /// {
-        ///     if (item.Defindex == 5021)
-        ///     {
-        ///         // Bot has a key in its inventory
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
-        public void GetOtherInventory()
+        public void LoadOtherInventories()
         {
-            otherInventoryTask = Task.Factory.StartNew(() =>Inventory_OLD.FetchInventory(OtherSID, Bot.ApiKey, SteamWeb));
+            OtherLoadedInventories = CInventory.FetchInventories(SteamWeb, OtherSID, Bot.InventoriesToLoad, userHandler:Bot.BotControlClass).ToList();
         }
 
-        public Inventory_OLD OtherInventory
+        /// <summary>
+        /// This loads the other user's inventories from the bot's config.
+        /// </summary>
+        public void LoadOtherInventoriesAsync()
         {
-            get
+            CInventory.FetchInventoriesAsync(SteamWeb, OtherSID, Bot.InventoriesToLoad, delegate(CInventory inventory)
             {
-                otherInventoryTask.Wait();
-                return otherInventoryTask.Result;
-            }
+                if (inventory.InventoryLoaded)
+                    OtherLoadedInventories.Add(inventory);
+            });
         }
 
         /// <summary>
@@ -219,9 +212,9 @@ namespace SteamBot
 
         public abstract void OnTradeInit ();
 
-        public abstract void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
+        public abstract void OnTradeAddItem (InventoryItem inventoryItem);
 
-        public abstract void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
+        public abstract void OnTradeRemoveItem (InventoryItem inventoryItem);
 
         public void OnTradeMessageHandler(string message)
         {
