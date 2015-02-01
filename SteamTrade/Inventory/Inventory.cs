@@ -217,7 +217,11 @@ namespace SteamTrade.Inventory
         public static void FetchInventoriesAsync(IEnumerable<Inventory> inventories, OnInventoryLoaded callback)
         {
             foreach (Inventory inv in inventories)
-                inv.FetchInventoryAsync(callback).Start();
+            {
+                Task task = inv.FetchInventoryAsync(callback);
+                if (task.Status == TaskStatus.Created)
+                    task.Start();
+            }
         }
 
         /// <summary>
@@ -257,7 +261,11 @@ namespace SteamTrade.Inventory
         public static void FetchInventoriesAsync(SteamWeb web, SteamID owner, IEnumerable<InventoryType> types, OnInventoryLoaded callback, FetchType fType = FetchType.Inventory, ulong iStart = 0)
         {
             foreach (InventoryType type in types)
-                new Inventory(web, owner, type, fType, iStart).FetchInventoryAsync(callback).Start();
+            {
+                Task task = new Inventory(web, owner, type, fType, iStart).FetchInventoryAsync(callback);
+                if (task.Status == TaskStatus.Created)
+                    task.Start();
+            }
         }
         #endregion
     }
