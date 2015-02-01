@@ -59,7 +59,7 @@ namespace SteamTrade.Inventory
         {
             if (callback == null)
                 throw new ArgumentNullException("Callback MUST NOT BE NULL! You might of intended an anonymous method.");
-            string invJson = await new InventoryJsonDownloader(web).FetchInventoryAsync(InventoryOwner, InventoryType, fType, start);
+            string invJson = await new InventoryJsonDownloader(web).FetchInventoryAsync(InventoryOwner, InventoryType, start, fType);
             if (String.IsNullOrWhiteSpace(invJson))
                 throw new InventoryFetchException(InventoryOwner);
             JObject invJO = JObject.Parse(invJson);
