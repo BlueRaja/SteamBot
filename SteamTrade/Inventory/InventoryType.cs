@@ -6,29 +6,6 @@ namespace SteamTrade.Inventory
     /// </summary>
     public class InventoryType
     {
-        public static readonly IEnumerable<InventoryType> InventoryTypes = new InventoryType[]{
-                                                                BattleBlockTheater,
-                                                                CSGO,
-                                                                Dota2,
-                                                                PathOfExile,
-                                                                Portal2,
-                                                                SinsOfADarkAge,
-                                                                Steam_Gifts,
-                                                                Steam_Coupons,
-                                                                Steam_Community,
-                                                                Steam_ItemRewards,
-                                                                SuperMondayNightCombat_Endorsements,
-                                                                SuperMondayNightCombat_Flair,
-                                                                SuperMondayNightCombat_Misc,
-                                                                SuperMondayNightCombat_Products,
-                                                                SuperMondayNightCombat_Pros,
-                                                                SuperMondayNightCombat_Taunts,
-                                                                SuperMondayNightCombat_TreasureBalls,
-                                                                SuperMondayNightCombat_Uniforms,
-                                                                SuperMondayNightCombat_Weapons,
-                                                                TeamFortress2,
-                                                                Warframe
-                                                            };
         public static readonly InventoryType BattleBlockTheater = new InventoryType(Game.BattleBlockTheater, 2);
         public static readonly InventoryType CSGO = new InventoryType(Game.CSGO, 2);
         public static readonly InventoryType Dota2 = new InventoryType(Game.Dota2, 2);
@@ -68,6 +45,29 @@ namespace SteamTrade.Inventory
         public static readonly InventoryType SuperMondayNightCombat_TreasureBalls = new InventoryType(Game.SuperMondayNightCombat, 14);
         public static readonly InventoryType TeamFortress2 = new InventoryType(Game.TeamFortress2, 2);
         public static readonly InventoryType Warframe = new InventoryType(Game.Warframe, 2);
+        public static readonly IEnumerable<InventoryType> InventoryTypes = new InventoryType[]{
+                                                                BattleBlockTheater,
+                                                                CSGO,
+                                                                Dota2,
+                                                                PathOfExile,
+                                                                Portal2,
+                                                                SinsOfADarkAge,
+                                                                Steam_Gifts,
+                                                                Steam_Coupons,
+                                                                Steam_Community,
+                                                                Steam_ItemRewards,
+                                                                SuperMondayNightCombat_Endorsements,
+                                                                SuperMondayNightCombat_Flair,
+                                                                SuperMondayNightCombat_Misc,
+                                                                SuperMondayNightCombat_Products,
+                                                                SuperMondayNightCombat_Pros,
+                                                                SuperMondayNightCombat_Taunts,
+                                                                SuperMondayNightCombat_TreasureBalls,
+                                                                SuperMondayNightCombat_Uniforms,
+                                                                SuperMondayNightCombat_Weapons,
+                                                                TeamFortress2,
+                                                                Warframe
+                                                            };
 
         /// <summary>
         /// A number representing the "subtype" of the inventory.  For instance, Steam coupons, Steam backgrounds/emotes/cards,
