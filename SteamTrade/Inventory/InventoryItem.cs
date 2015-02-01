@@ -15,9 +15,11 @@ namespace SteamTrade.Inventory
         public string IconUrl { get; internal set; }
         public string IconUrlLarge { get; internal set; }
         public string Type { get; internal set; }
-        public long Id { get; internal set; }
+        public ulong Id { get; internal set; }
         public int InventoryPosition { get; internal set; }
         public string NameColor { get; internal set; }
         public string BackgroundColor { get; internal set; }
+        public string Description { get; internal set; }
+        public IEnumerable<InventoryTag> Tags { get; internal set; }
     }
 }
