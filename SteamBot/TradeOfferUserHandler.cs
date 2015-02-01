@@ -1,8 +1,7 @@
-﻿using SteamKit2;
-using SteamTrade;
+﻿using System.Collections.Generic;
+using SteamKit2;
+using SteamTrade.Inventory;
 using SteamTrade.TradeOffer;
-using System;
-using System.Collections.Generic;
 using TradeAsset = SteamTrade.TradeOffer.TradeOffer.TradeStatusUser.TradeAsset;
 
 namespace SteamBot
@@ -112,9 +111,9 @@ namespace SteamBot
 
         public override void OnTradeInit() { }
 
-        public override void OnTradeAddItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) { }
+        public override void OnTradeAddItem(InventoryItem inventoryItem) { }
 
-        public override void OnTradeRemoveItem(Schema.Item schemaItem, Inventory_OLD.Item inventoryItem) { }
+        public override void OnTradeRemoveItem(InventoryItem inventoryItem) { }
 
         public override void OnTradeMessage(string message) { }
 

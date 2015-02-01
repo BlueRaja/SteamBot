@@ -1,19 +1,19 @@
 using System;
-using System.Threading.Tasks;
-using System.Web;
-using System.Net;
-using System.Text;
-using System.IO;
-using System.Threading;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.ComponentModel;
+using System.IO;
+using System.Net;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using SteamBot.Logging;
 using SteamBot.SteamGroups;
 using SteamKit2;
-using SteamTrade;
 using SteamKit2.Internal;
+using SteamTrade;
+using SteamTrade.Inventory;
 using SteamTrade.TradeOffer;
-using SteamBot.Logging;
 
 namespace SteamBot
 {
@@ -103,14 +103,15 @@ namespace SteamBot
 
         TradeManager tradeManager;
         private TradeOfferManager tradeOfferManager;
-        private Task<Inventory_OLD> myInventoryTask;
+        private IEnumerable<Inventory> myInventory;
 
-        public Inventory_OLD MyInventory
+        public IEnumerable<Inventory> MyInventory
         {
             get
             {
-                myInventoryTask.Wait();
-                return myInventoryTask.Result;
+                if (myInventory == null || !myInventory.Any())
+                    return null;
+                return myInventory;
             }
         }
 
@@ -460,13 +461,6 @@ namespace SteamBot
                 MyUniqueId = callback.UniqueID.ToString();
 
                 UserWebLogOn();
-
-                if (Trade.CurrentSchema == null)
-                {
-                    log.Info("Downloading Schema...");
-                    Trade.CurrentSchema = Schema.FetchSchema (ApiKey);
-                    log.Success("Schema Downloaded!");
-                }
 
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
                 SteamFriends.SetPersonaState(EPersonaState.Online);
@@ -843,7 +837,13 @@ namespace SteamBot
         /// </example>
         public void GetInventory()
         {
-            myInventoryTask = Task.Factory.StartNew(() => Inventory_OLD.FetchInventory(SteamUser.SteamID, ApiKey, SteamWeb));
+            List<Inventory> myInventoryList = new List<Inventory>();
+            Inventory.FetchInventoriesAsync(SteamWeb, SteamUser.SteamID, InventoryType.InventoryTypes, delegate(Inventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    myInventoryList.Add(inventory);
+            });
+            myInventory = myInventoryList;
         }
 
         public void TradeOfferRouter(TradeOffer offer)

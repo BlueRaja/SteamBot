@@ -1,10 +1,34 @@
-﻿namespace SteamTrade.Inventory
+﻿using System.Collections.Generic;
+namespace SteamTrade.Inventory
 {
     /// <summary>
     /// A single game may have multiple "types" of inventories.  This immutable class represents a specific inventory type for a specific game.
     /// </summary>
     public class InventoryType
     {
+        public static readonly IEnumerable<InventoryType> InventoryTypes = new InventoryType[]{
+                                                                BattleBlockTheater,
+                                                                CSGO,
+                                                                Dota2,
+                                                                PathOfExile,
+                                                                Portal2,
+                                                                SinsOfADarkAge,
+                                                                Steam_Gifts,
+                                                                Steam_Coupons,
+                                                                Steam_Community,
+                                                                Steam_ItemRewards,
+                                                                SuperMondayNightCombat_Endorsements,
+                                                                SuperMondayNightCombat_Flair,
+                                                                SuperMondayNightCombat_Misc,
+                                                                SuperMondayNightCombat_Products,
+                                                                SuperMondayNightCombat_Pros,
+                                                                SuperMondayNightCombat_Taunts,
+                                                                SuperMondayNightCombat_TreasureBalls,
+                                                                SuperMondayNightCombat_Uniforms,
+                                                                SuperMondayNightCombat_Weapons,
+                                                                TeamFortress2,
+                                                                Warframe
+                                                            };
         public static readonly InventoryType BattleBlockTheater = new InventoryType(Game.BattleBlockTheater, 2);
         public static readonly InventoryType CSGO = new InventoryType(Game.CSGO, 2);
         public static readonly InventoryType Dota2 = new InventoryType(Game.Dota2, 2);
@@ -49,14 +73,14 @@
         /// A number representing the "subtype" of the inventory.  For instance, Steam coupons, Steam backgrounds/emotes/cards,
         /// and Steam gifts all have different context id's.
         /// </summary>
-        public readonly int ContextId;
+        public readonly long ContextId;
 
         /// <summary>
         /// The game which this type of inventory belongs to
         /// </summary>
         public readonly Game Game;
 
-        private InventoryType(Game game, int contextId)
+        public InventoryType(Game game, long contextId)
         {
             Game = game;
             ContextId = contextId;

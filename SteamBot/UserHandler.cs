@@ -1,12 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using SteamBot.Logging;
 using SteamKit2;
 using SteamTrade;
-using SteamBot.Logging;
+using SteamTrade.Inventory;
 using SteamTrade.TradeOffer;
 
 namespace SteamBot
@@ -21,7 +19,7 @@ namespace SteamBot
         public SteamID OtherSID { get; private set; }
 
         private bool _lastMessageWasFromTrade;
-        private Task<Inventory_OLD> otherInventoryTask;
+        private IEnumerable<Inventory> otherInventory;
 
         protected SteamWeb SteamWeb
         {
@@ -59,15 +57,22 @@ namespace SteamBot
         /// </example>
         public void GetOtherInventory()
         {
-            otherInventoryTask = Task.Factory.StartNew(() =>Inventory_OLD.FetchInventory(OtherSID, Bot.ApiKey, SteamWeb));
+            var otherInventoryList = new List<Inventory>();
+            Inventory.FetchInventoriesAsync(SteamWeb, OtherSID, InventoryType.InventoryTypes, delegate(Inventory inventory)
+            {
+                if (inventory.InventoryLoaded)
+                    otherInventoryList.Add(inventory);
+            });
+            otherInventory = otherInventoryList;
         }
 
-        public Inventory_OLD OtherInventory
+        public IEnumerable<Inventory> OtherInventory
         {
             get
             {
-                otherInventoryTask.Wait();
-                return otherInventoryTask.Result;
+                if (otherInventory == null || !otherInventory.Any())
+                    return null;
+                return otherInventory;
             }
         }
 
@@ -219,9 +224,9 @@ namespace SteamBot
 
         public abstract void OnTradeInit ();
 
-        public abstract void OnTradeAddItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
+        public abstract void OnTradeAddItem (InventoryItem inventoryItem);
 
-        public abstract void OnTradeRemoveItem (Schema.Item schemaItem, Inventory_OLD.Item inventoryItem);
+        public abstract void OnTradeRemoveItem (InventoryItem inventoryItem);
 
         public void OnTradeMessageHandler(string message)
         {
