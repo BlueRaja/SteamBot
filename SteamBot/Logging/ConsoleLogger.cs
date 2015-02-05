@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace SteamBot.Logging
 {
@@ -9,9 +7,11 @@ namespace SteamBot.Logging
     {
         private ConsoleColor DefaultConsoleColor;
 
-        public ConsoleLogger(LogLevel outputLevel, ConsoleColor defaultColor = ConsoleColor.White) : base(outputLevel)
+        public ConsoleLogger(JObject logParams)
+            : base(logParams)
         {
-            DefaultConsoleColor = defaultColor;
+            if (logParams["DefaultColor"] == null || !Enum.TryParse<ConsoleColor>((string)logParams["DefaultColor"], out DefaultConsoleColor))
+                DefaultConsoleColor = ConsoleColor.White;
             Console.ForegroundColor = DefaultConsoleColor;
         }
 

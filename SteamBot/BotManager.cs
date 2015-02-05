@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using SteamKit2;
 using SteamBot.Logging;
+using System.Dynamic;
 
 namespace SteamBot
 {
@@ -52,8 +53,12 @@ namespace SteamBot
                 return false;
 
             useSeparateProcesses = ConfigObject.UseSeparateProcesses;
-
-            mainLog = new Log(null, true, new ConsoleLogger(LogLevel.Info), new FileLogger(LogLevel.Info, ConfigObject.MainLog));
+            string json = "{" +
+            "\"LogLevel\": \"Info\"," +
+            "\"LogFile\": \"" + ConfigObject.MainLog + "\"" +
+            "}";
+            dynamic LogParams = JsonConvert.DeserializeObject<dynamic>(json);
+            mainLog = new Log(null, true, new ConsoleLogger(LogParams), new FileLogger(LogParams));
 
             for (int i = 0; i < ConfigObject.Bots.Length; i++)
             {

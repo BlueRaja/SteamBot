@@ -1,19 +1,17 @@
 using System;
-using System.Threading.Tasks;
-using System.Web;
-using System.Net;
-using System.Text;
-using System.IO;
-using System.Threading;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.ComponentModel;
+using System.IO;
+using System.Net;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using SteamBot.Logging;
 using SteamBot.SteamGroups;
 using SteamKit2;
-using SteamTrade;
 using SteamKit2.Internal;
+using SteamTrade;
 using SteamTrade.TradeOffer;
-using SteamBot.Logging;
 
 namespace SteamBot
 {
@@ -48,7 +46,6 @@ namespace SteamBot
 
         // The log for the bot.  This logs with the bot's display name.
         public Log log;
-        private string logFile;
 
         public delegate UserHandler UserHandlerCreator(Bot bot, SteamID id);
         public UserHandlerCreator CreateHandler;
@@ -83,8 +80,7 @@ namespace SteamBot
         string DisplayNamePrefix;
 
         // Log level to use for this bot
-        LogLevel ConsoleLogLevel;
-        LogLevel FileLogLevel;
+        LogLevel DefaultLogLevel;
 
         // The number, in milliseconds, between polls for the trade.
         int TradePollingInterval;
@@ -104,6 +100,7 @@ namespace SteamBot
         TradeManager tradeManager;
         private TradeOfferManager tradeOfferManager;
         private Task<Inventory> myInventoryTask;
+        private IEnumerable<Configuration.Loggers> loggerInfo;
 
         public Inventory MyInventory
         {
@@ -137,35 +134,21 @@ namespace SteamBot
             {
                 if(config.LogLevel != null)
                 {
-                    ConsoleLogLevel = (LogLevel) Enum.Parse(typeof(LogLevel), config.LogLevel, true);
+                    DefaultLogLevel = (LogLevel) Enum.Parse(typeof(LogLevel), config.LogLevel, true);
                     Console.WriteLine(
-                        @"(Console) LogLevel configuration parameter used in bot {0} is depreciated and may be removed in future versions. Please use ConsoleLogLevel instead.",
+                        @"(Console) LogLevel configuration parameter used in bot {0} is depreciated and may be removed in future versions. Please use Loggers array instead.",
                         DisplayName);
-                }
-                else
-                {
-                    ConsoleLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), config.ConsoleLogLevel, true);
                 }
             }
             catch (ArgumentException)
             {
                 Console.WriteLine(@"(Console) ConsoleLogLevel invalid or unspecified for bot {0}. Defaulting to ""Info""", DisplayName);
-                ConsoleLogLevel = LogLevel.Info;
+                DefaultLogLevel = LogLevel.Info;
             }
 
-            try
-            {
-                FileLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), config.FileLogLevel, true);
-            }
-            catch (ArgumentException)
-            {
-                Console.WriteLine(@"(Console) FileLogLevel invalid or unspecified for bot {0}. Defaulting to ""Info""", DisplayName);
-                FileLogLevel = LogLevel.Info;
-            }
-
-            logFile = config.LogFile;
             CreateHandler = handlerCreator;
             BotControlClass = config.BotControlClass;
+            loggerInfo = config.Loggers;
             CreateLog();
             SteamWeb = new SteamWeb();
 
@@ -189,8 +172,15 @@ namespace SteamBot
 
         private void CreateLog()
         {
-            if(log == null)
-                log = new Log(DisplayName, true, new ConsoleLogger(ConsoleLogLevel), new FileLogger(FileLogLevel, logFile));
+            if (log != null)
+                return;
+            List<LoggerBase> loggers = new List<LoggerBase>();
+            foreach (Configuration.Loggers logger in loggerInfo)
+            {
+                LoggerBase nLogger = (LoggerBase)Activator.CreateInstance(Type.GetType(logger.LoggerType), logger.Params);
+                loggers.Add(nLogger);
+            }
+            log = new Log(DisplayName, true, loggers.ToArray());
         }
 
         private void DisposeLog()
@@ -917,8 +907,7 @@ namespace SteamBot
                 StopBot();
                 //StartBot();
             }
-
-            log.Dispose();
+            DisposeLog();
         }
 
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
@@ -939,6 +928,8 @@ namespace SteamBot
                 }
                 catch (Exception e)
                 {
+                    if (log == null)
+                        return;
                     log.Error(e.ToString());
                     log.Warn("Restarting bot...");
                 }

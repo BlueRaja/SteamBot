@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace SteamBot.Logging
@@ -29,6 +28,11 @@ namespace SteamBot.Logging
                 this.OnLog += logger.LogMessage;
             }
             ShowBotName = true;
+        }
+
+        ~Log()
+        {
+            Dispose(false);
         }
 
         private void CallLogMessage(LogLevel level, string data, params object[] formatParams)
@@ -95,10 +99,22 @@ namespace SteamBot.Logging
 
         public void Dispose()
         {
-            Disposed = true;
-            foreach (IDisposable logger in LoggerObjects.OfType<IDisposable>())
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Dispose(bool disposing)
+        {
+            if (!Disposed)
             {
-                logger.Dispose();
+                if (disposing)
+                {
+                    foreach (IDisposable disposableLogger in LoggerObjects.OfType<IDisposable>())
+                        disposableLogger.Dispose();
+                }
+                LoggerObjects.Clear();
+                LoggerObjects = null;
+                Disposed = true;
             }
         }
     }

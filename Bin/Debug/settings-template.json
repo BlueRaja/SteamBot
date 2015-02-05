@@ -11,14 +11,26 @@
             "ApiKey":"Bot specific apiKey",
             "DisplayName":"TestBot",
             "ChatResponse":"Hi there bro",
-            "logFile": "TestBot.log",
             "BotControlClass": "SteamBot.SimpleUserHandler",
             "MaximumTradeTime":180,
             "MaximumActionGap":30,
             "DisplayNamePrefix":"[AutomatedBot] ",
             "TradePollingInterval":800,
-            "ConsoleLogLevel":"Success",
-            "FileLogLevel":"Info",
+            "Loggers": [
+                {
+                    "LoggerType": "SteamBot.Logging.ConsoleLogger",
+                    "Params": { 
+                        "LogLevel": "Info"
+                    }
+                },
+                {
+                    "LoggerType": "SteamBot.Logging.FileLogger",
+                    "Params": {
+                        "LogLevel": "Info",
+                        "LogFile": "TestBot.log"
+                    }
+                }
+            ],
             "AutoStart": "true"
         }
     ]

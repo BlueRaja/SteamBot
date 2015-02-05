@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace SteamBot.Logging
 {
@@ -51,11 +50,12 @@ namespace SteamBot.Logging
         /// <summary>
         /// The min logging output level for this class.
         /// </summary>
-        public LogLevel OutputLevel { get; set; }
+        public LogLevel OutputLevel;
 
-        public LoggerBase(LogLevel outputLevel)
+        public LoggerBase(JObject logParams)
         {
-            OutputLevel = outputLevel;
+            if (!Enum.TryParse<LogLevel>((string)logParams["LogLevel"], out OutputLevel))
+                OutputLevel = LogLevel.Info;
         }
 
         private string BotName(LoggerParams lParams)

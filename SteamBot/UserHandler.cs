@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using SteamBot.Logging;
 using SteamKit2;
 using SteamTrade;
-using SteamBot.Logging;
 using SteamTrade.TradeOffer;
 
 namespace SteamBot
@@ -179,10 +176,6 @@ namespace SteamBot
         public virtual void OnBotCommand(string command)
         {
 
-        }
-
-        public virtual void OnBotCreated()
-        {
         }
 
         /// <summary>
