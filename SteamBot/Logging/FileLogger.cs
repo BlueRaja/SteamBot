@@ -36,7 +36,6 @@ namespace SteamBot.Logging
         public void Dispose()
         {
             FileDispose();
-            GC.SuppressFinalize(this);
         }
 
         private void FileDispose()
