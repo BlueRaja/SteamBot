@@ -106,8 +106,8 @@ namespace SteamBot.Logging
         {
             if (!Disposed)
             {
-                    foreach (IDisposable disposableLogger in LoggerObjects.OfType<IDisposable>())
-                        disposableLogger.Dispose();
+                foreach (IDisposable disposableLogger in LoggerObjects.OfType<IDisposable>())
+                    disposableLogger.Dispose();
                 LoggerObjects.Clear();
                 LoggerObjects = null;
                 Disposed = true;
