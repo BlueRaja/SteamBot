@@ -52,7 +52,7 @@ namespace SteamBot
                 return false;
 
             useSeparateProcesses = ConfigObject.UseSeparateProcesses;
-            JObject LogParams = JsonConvert.DeserializeObject<JObject>("{" +
+            JObject LogParams = JObject.Parse("{" +
             "\"LogLevel\": \"Info\"," +
             "\"LogFile\": \"" + ConfigObject.MainLog + "\"" +
             "}");
