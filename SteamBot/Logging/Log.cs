@@ -32,7 +32,7 @@ namespace SteamBot.Logging
 
         ~Log()
         {
-            Dispose(false);
+            LogDispose();
         }
 
         private void CallLogMessage(LogLevel level, string data, params object[] formatParams)
@@ -99,18 +99,15 @@ namespace SteamBot.Logging
 
         public void Dispose()
         {
-            Dispose(true);
+            LogDispose();
         }
 
-        private void Dispose(bool disposing)
+        private void LogDispose()
         {
             if (!Disposed)
             {
-                if (disposing)
-                {
                     foreach (IDisposable disposableLogger in LoggerObjects.OfType<IDisposable>())
                         disposableLogger.Dispose();
-                }
                 LoggerObjects.Clear();
                 LoggerObjects = null;
                 Disposed = true;
