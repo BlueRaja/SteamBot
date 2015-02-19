@@ -103,7 +103,7 @@ namespace SteamBot.Logging
             GC.SuppressFinalize(this);
         }
 
-        public void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!Disposed)
             {

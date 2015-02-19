@@ -39,7 +39,7 @@ namespace SteamBot.Logging
             GC.SuppressFinalize(this);
         }
 
-        public void FileDispose()
+        private void FileDispose()
         {
             if (!Disposed)
             {
