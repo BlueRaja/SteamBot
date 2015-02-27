@@ -80,7 +80,7 @@ namespace SteamTrade.Inventory
             {
                 //Inventory has more then 2500 items.
                 //Note: No more items are added IF callback isn't fired. Hence why this is asynced.
-                await new Inventory(web, InventoryOwner, InventoryType, fType, (int)invJO["more_start"]).FetchInventoryAsync(delegate(Inventory inventory)
+                await new Inventory(web, InventoryOwner, InventoryType, fType, (ulong)invJO["more_start"]).FetchInventoryAsync(delegate(Inventory inventory)
                 {
                     if (inventory.InventoryLoaded)
                         items.AddRange(inventory.Items);

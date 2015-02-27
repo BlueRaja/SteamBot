@@ -73,10 +73,6 @@
     <Compile Include="Exceptions\InventoryFetchException.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Inventory\Example JSON\Dota2.json" />
-    <None Include="Inventory\Example JSON\Steam_Community.json" />
-    <None Include="Inventory\Example JSON\Steam_Gifts.json" />
-    <None Include="Inventory\Example JSON\TeamFortress2.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
