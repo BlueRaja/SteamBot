@@ -60,6 +60,7 @@
     <Compile Include="Inventory\Inventory.cs" />
     <Compile Include="Inventory\InventoryTag.cs" />
     <Compile Include="Inventory\InventoryType.cs" />
+    <Compile Include="TF2Value.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="SteamWeb.cs" />
     <Compile Include="TradeOffer\OfferSession.cs" />
