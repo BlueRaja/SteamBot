@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using SteamBot.Logging;
 using SteamKit2;
 using SteamTrade;
@@ -20,6 +21,7 @@ namespace SteamBot
 
         private bool _lastMessageWasFromTrade;
         private IEnumerable<Inventory> otherInventory;
+        private TaskCompletionSource<string> _waitingOnUserResponse;
 
         protected SteamWeb SteamWeb
         {
