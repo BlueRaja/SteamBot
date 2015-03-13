@@ -381,7 +381,6 @@ namespace SteamBot
                                              response);
 
                 log.Info ("Bot sent other: {0}", response);
-
                 CurrentTrade = null;
                 return false;
             }
@@ -461,7 +460,6 @@ namespace SteamBot
                 MyUniqueId = callback.UniqueID.ToString();
 
                 UserWebLogOn();
-
                 SteamFriends.SetPersonaName(DisplayNamePrefix + DisplayName);
                 SteamFriends.SetPersonaState(EPersonaState.Online);
 
@@ -657,7 +655,6 @@ namespace SteamBot
                 CloseTrade();
                 log.Warn("Disconnected from Steam Network!");
                 }
-
                 SteamClient.Connect();
             });
             #endregion
@@ -717,21 +714,20 @@ namespace SteamBot
                     Thread.Sleep(2000);
                 }
             } while(!IsLoggedIn);
+            log.Success("User Authenticated!");
 
-                    log.Success("User Authenticated!");
+            tradeManager = new TradeManager(ApiKey, SteamWeb);
+            tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
+            tradeManager.OnTimeout += OnTradeTimeout;
 
-                    tradeManager = new TradeManager(ApiKey, SteamWeb);
-                    tradeManager.SetTradeTimeLimits(MaximumTradeTime, MaximiumActionGap, TradePollingInterval);
-                    tradeManager.OnTimeout += OnTradeTimeout;
+            tradeOfferManager = new TradeOfferManager(ApiKey, SteamWeb);
+            SubscribeTradeOffer(tradeOfferManager);
 
-                    tradeOfferManager = new TradeOfferManager(ApiKey, SteamWeb);
-                    SubscribeTradeOffer(tradeOfferManager);
+            CookiesAreInvalid = false;
 
-                    CookiesAreInvalid = false;
-
-                    // Success, check trade offers which we have received while we were offline
-                    tradeOfferManager.GetOffers();
-                }
+            // Success, check trade offers which we have received while we were offline
+            tradeOfferManager.GetOffers();
+        }
 
         /// <summary>
         /// Checks if sessionId and token cookies are still valid.
