@@ -155,46 +155,34 @@ namespace SteamTrade.TradeOffer
 
         /// <summary>
         /// Accepts the current offer
-        /// </summary>        
-        /// <returns>TradeOfferAcceptResponse object containing accept result</returns>
-        public TradeOfferAcceptResponse Accept()
-        {
-            if (TradeOfferId == null)
-            {
-                return new TradeOfferAcceptResponse { TradeError = "Can't accept a trade without a tradeofferid" };                
-            }
-            if (!IsOurOffer && OfferState == TradeOfferState.TradeOfferStateActive)
-            {
-                return Session.Accept(TradeOfferId);
-            }
-            //todo: log wrong state
-            return new TradeOfferAcceptResponse { TradeError = "Can't accept a trade that is not active" };            
-        }
-
-
-        /// <summary>
-        /// Accepts the current offer. Old signature for compatibility
         /// </summary>
         /// <param name="tradeId">the tradeid if successful</param>
         /// <returns>true if successful, otherwise false</returns>
-        [Obsolete("Use TradeOfferAcceptResponse Accept()")]
         public bool Accept(out string tradeId)
         {
             tradeId = String.Empty;
-            if (TradeOfferId == null) 
-            {   
-                //throw like original function did             
+            if (TradeOfferId == null)
+            {
+                Debug.WriteLine("Can't accept a trade without a tradeofferid");
                 throw new ArgumentException("TradeOfferId");
             }
-            else 
+            if (!IsOurOffer && OfferState == TradeOfferState.TradeOfferStateActive)
             {
-                TradeOfferAcceptResponse result = Accept();
-                if (result.Accepted) 
-                {
-                    tradeId = result.TradeId;
-                }
-                return result.Accepted;
-            }            
+                return Session.Accept(TradeOfferId, out tradeId);
+            }
+            //todo: log wrong state
+            Debug.WriteLine("Can't accept a trade that is not active");
+            return false;
+        }
+
+        /// <summary>
+        /// Accepts the current offer
+        /// </summary>
+        /// <returns>true if successful, otherwise false</returns>
+        public bool Accept()
+        {
+            string tradeId;
+            return Accept(out tradeId);
         }
 
         /// <summary>

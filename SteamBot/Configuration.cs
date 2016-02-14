@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -5,8 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace SteamBot
 {
@@ -43,13 +43,13 @@ namespace SteamBot
             }
         }
 
-        public static Configuration LoadConfiguration (string filename)
+        public static Configuration LoadConfiguration(string filename)
         {
             TextReader reader = new StreamReader(filename);
             string json = reader.ReadToEnd();
             reader.Close();
 
-            Configuration config =  JsonConvert.DeserializeObject<Configuration>(json);
+            Configuration config = JsonConvert.DeserializeObject<Configuration>(json);
 
             config.Admins = config.Admins ?? new SteamKit2.SteamID[0];
 
@@ -66,7 +66,7 @@ namespace SteamBot
         }
 
         #region Top-level config properties
-        
+
         /// <summary>
         /// Gets or sets the admins.
         /// </summary>
@@ -152,6 +152,10 @@ namespace SteamBot
             public string ApiKey { get; set; }
             public string DisplayName { get; set; }
             public string ChatResponse { get; set; }
+            public string BotWebsiteURL { get; set; }
+            public string BotWebsiteName { get; set; }
+            public string BotDBPassword { get; set; }
+            public string ProfitAdmin { get; set; }
             public string LogFile { get; set; }
             public string BotControlClass { get; set; }
             public int MaximumTradeTime { get; set; }
@@ -177,8 +181,8 @@ namespace SteamBot
             /// If <see cref="SteamBot.Configuration.AutoStartAllBots "/> is true,
             /// then this property has no effect and is ignored.
             /// </remarks>
-            [JsonProperty (Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-            [DefaultValue (true)]
+            [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+            [DefaultValue(true)]
             public bool AutoStart { get; set; }
 
             public override string ToString()
@@ -189,7 +193,7 @@ namespace SteamBot
                 foreach (var propInfo in fields)
                 {
                     sb.AppendFormat("{0} = {1}" + Environment.NewLine,
-                        propInfo.Name, 
+                        propInfo.Name,
                         propInfo.GetValue(this, null));
                 }
 
