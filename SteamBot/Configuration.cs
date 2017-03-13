@@ -119,6 +119,7 @@ namespace SteamBot
         {
             public string Username { get; set; }
             public string Password { get; set; }
+            public string ApiKey { get; set; }
             public string DisplayName { get; set; }
             public string ChatResponse { get; set; }
             public string LogFile { get; set; }
@@ -127,9 +128,12 @@ namespace SteamBot
             public int MaximumActionGap { get; set; }
             public string DisplayNamePrefix { get; set; }
             public int TradePollingInterval { get; set; }
-            public string LogLevel { get; set; }
+            public string ConsoleLogLevel { get; set; }
             public string FileLogLevel { get; set; }
             public ulong[] Admins { get; set; }
+
+            // Depreciated configuration options
+            public string LogLevel { get; set; }
 
             /// <summary>
             /// Gets or sets a value indicating whether to auto start this bot.

@@ -8,6 +8,7 @@
         {
             "Username":"BOT USERNAME",
             "Password":"BOT PASSWORD",
+            "ApiKey":"Bot specific apiKey",
             "DisplayName":"TestBot",
             "ChatResponse":"Hi there bro",
             "logFile": "TestBot.log",
@@ -16,7 +17,7 @@
             "MaximumActionGap":30,
             "DisplayNamePrefix":"[AutomatedBot] ",
             "TradePollingInterval":800,
-            "LogLevel":"Success",
+            "ConsoleLogLevel":"Success",
             "FileLogLevel":"Info",
             "AutoStart": "true"
         }
