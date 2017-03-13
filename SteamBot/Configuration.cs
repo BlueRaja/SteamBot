@@ -4,11 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace SteamBot
 {
     public class Configuration
     {
+        public class Loggers
+        {
+            public string LoggerType { get; set; }
+            public JObject Params { get; set; }
+        }
+
         public static Configuration LoadConfiguration (string filename)
         {
             TextReader reader = new StreamReader(filename);
@@ -119,17 +126,19 @@ namespace SteamBot
         {
             public string Username { get; set; }
             public string Password { get; set; }
+            public string ApiKey { get; set; }
             public string DisplayName { get; set; }
             public string ChatResponse { get; set; }
-            public string LogFile { get; set; }
             public string BotControlClass { get; set; }
             public int MaximumTradeTime { get; set; }
             public int MaximumActionGap { get; set; }
             public string DisplayNamePrefix { get; set; }
             public int TradePollingInterval { get; set; }
-            public string LogLevel { get; set; }
-            public string FileLogLevel { get; set; }
             public ulong[] Admins { get; set; }
+            public Loggers[] Loggers { get; set; }
+
+            // Depreciated configuration options
+            public string LogLevel { get; set; }
 
             /// <summary>
             /// Gets or sets a value indicating whether to auto start this bot.
